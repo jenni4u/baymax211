@@ -1,14 +1,9 @@
 from utils.brick import Motor, wait_ready_sensors
 import math
 
-RIGHT_WHEEL = Motor("C")
-LEFT_WHEEL = Motor("B")
-wait_ready_sensors()
-print("System is ready!")
-
 # MOVEMENT PARAMETERS
-DISTTODEG = 360 / (2 * math.pi * RADIUS)  # Conversion factor from cm to degrees for 2 cm radius wheels
 RADIUS = 2 #radius of wheel in cm
+DISTTODEG = 360 / (2 * math.pi * RADIUS)  # Conversion factor from cm to degrees for 2 cm radius wheels
 
 # TURNING PARAMETERS
 DISTANCE_WHEEL_FROM_CENTER = 6 #distance between wheels in cm
@@ -19,6 +14,12 @@ OUTER_RADIUS = CENTER + DISTANCE_WHEEL_FROM_CENTER
 # CONTROL PARAMETERS
 DPS = 300
 CHECK_TURN = -10 # distance outer wheel travels in entrance check turn
+
+# Initialize motors
+RIGHT_WHEEL = Motor("C")
+LEFT_WHEEL = Motor("B")
+wait_ready_sensors()
+print("System is ready!")
 
 # Set wheel speed limits
 RIGHT_WHEEL.set_limits(dps=DPS)
