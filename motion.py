@@ -34,7 +34,7 @@ def move_forward(distance):
     RIGHT_WHEEL.set_position_relative(distance * DISTTODEG)
     
 
-def right_half_turn(direction):
+def check_entrance(direction):
     """Turn the robot to position color sensor on the entrance.
     1 for right, 0 for left.
     """
@@ -43,7 +43,7 @@ def right_half_turn(direction):
         wheel = LEFT_WHEEL
     else:
         wheel = RIGHT_WHEEL
-        
+
     wheel.set_position_relative(CHECK_TURN * DISTTODEG) # Rotate wheel
 
 
