@@ -1,4 +1,3 @@
-from utils.brick import Motor, TouchSensor, reset_brick, BP, wait_ready_sensors, SensorError, EV3UltrasonicSensor
 import math
 import csv 
 
@@ -100,14 +99,14 @@ class ColorDetectionAlgorithm:
 
     def create_dictionary_of_clusters(self) :
         clusters = {}
-        for color in ["blue", "green", "purple", "red"]:
-            clusters[color] = self.find_cluster_of_colored_block(f"/home/pi/ecse211/Brick_Pi_211-main/Color_files/{color}.csv")
+        for color in ["blue", "green", "purple", "red", "orange", "yellow"]:
+            clusters[color] = self.find_cluster_of_colored_block(f"/home/pi/ecse211/baymax211/Color_files/{color}.csv")
         return clusters
     
     def create_dictionary_of_thresholds(self) :
         thresholds = {}
-        for color in ["blue", "green", "purple", "red"]:
-            thresholds[color] = self.compute_threshold_of_colored_block(f"/home/pi/ecse211/Brick_Pi_211-main/Color_files/{color}.csv")
+        for color in ["blue", "green", "purple", "red","orange", "yellow"]:
+            thresholds[color] = self.compute_threshold_of_colored_block(f"/home/pi/ecse211/baymax211/Color_files/{color}.csv")
         return thresholds
 
     
