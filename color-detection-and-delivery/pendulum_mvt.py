@@ -4,9 +4,9 @@ import time
 
 #----------- CONSTANTS -----------#
 INITIAL_POSITION = 0
-FIRST_POSITION = -45
-SECOND_POSITION = 45
-MOTOR_DPS = 250
+LEFT_POSITION = -45
+RIGHT_POSITION = 45
+MOTOR_DPS = 100
 TIME_SLEEP = 0.5
 
 #------------- SETUP -------------#
@@ -29,16 +29,23 @@ try:
             #if TOUCH_SENSOR.is_pressed():
             print("Button pressed!") 
             motor.set_dps(MOTOR_DPS)
-            motor.set_position(INITIAL_POSITION)
-            time.sleep(TIME_SLEEP)
-            motor.set_position(FIRST_POSITION)
+            motor.set_position(LEFT_POSITION)
             time.sleep(TIME_SLEEP)
             motor.set_position(INITIAL_POSITION)
             time.sleep(TIME_SLEEP)
-            motor.set_position(SECOND_POSITION)
+            motor.set_position(RIGHT_POSITION)
+            time.sleep(TIME_SLEEP)
+            motor.set_position(INITIAL_POSITION)
+            time.sleep(TIME_SLEEP)
 
         except SensorError as error:
             print("Sensor error:", error)
             break
+        
+except KeyboardInterrupt:
+    motor.set_dps(MOTOR_DPS)
+    motor.set_position(INITIAL_POSITION)
+    time.sleep(1)
+    BP.reset_all()
 except BaseException as error:
     BP.reset_all()
