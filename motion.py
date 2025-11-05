@@ -163,3 +163,5 @@ def turnWSensor(direction):
     inner_wheel.set_dps(-inner_dps)
     outer_wheel.set_dps(-outer_dps)
     """
+
+turnWSensor(1)
