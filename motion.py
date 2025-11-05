@@ -1,4 +1,4 @@
-from utils.brick import Motor, wait_ready_sensors
+from utils.brick import Motor, EV3GyroSensor, wait_ready_sensors
 import math
 
 # MOVEMENT PARAMETERS
@@ -18,6 +18,8 @@ CHECK_TURN = -10 # distance outer wheel travels in entrance check turn
 # Initialize motors
 RIGHT_WHEEL = Motor("C")
 LEFT_WHEEL = Motor("B")
+gyro = EV3GyroSensor(1)
+
 wait_ready_sensors()
 print("System is ready!")
 
@@ -111,4 +113,53 @@ def turn(direction):
     inner_wheel.set_dps(-inner_dps)
     outer_wheel.set_dps(-outer_dps)
     """
+
+def turnWSensor(direction): 
+    """
+    Turn the robot 90 degrees in the specified direction.
+    1 for right, 0 for left.
+    """
+    # Calculate the distance each wheel needs to travel for a 90 degree turn
+    inner_turn = 0.25 * (2 * math.pi * INNER_RADIUS)
+    outer_turn = 0.25 * (2 * math.pi * OUTER_RADIUS)
     
+    # initialize inner and outer wheels
+    if direction: #right
+        inner_wheel = RIGHT_WHEEL
+        outer_wheel = LEFT_WHEEL
+
+        # adjustment factors
+        inner_turn = 0.98*inner_turn
+        outer_turn = 1.07*outer_turn
+        
+    else: #left
+        inner_wheel = LEFT_WHEEL
+        outer_wheel = RIGHT_WHEEL
+
+        # adjustment factors
+        inner_turn = 1*inner_turn
+        outer_turn = 1.03*outer_turn
+
+    # calculate a imaginary center wheel dps for reference
+    reference_turn = 0.25 * (2 * math.pi * CENTER)
+    time = reference_turn * DISTTODEG / DPS
+
+    # calculate inner and outer wheel dps
+    inner_dps = inner_turn * DISTTODEG / time   
+    outer_dps = outer_turn * DISTTODEG / time    
+
+    # set wheel dps limits for turn
+    inner_wheel.set_limits(dps=inner_dps)
+    outer_wheel.set_limits(dps=outer_dps)
+
+    # rotate wheels for preset turn
+    inner_wheel.set_position_relative(-inner_turn * DISTTODEG)
+    outer_wheel.set_position_relative(-outer_turn * DISTTODEG)
+
+    print(gyro.get_abs_measure()) 
+
+    # continuous turning
+    """
+    inner_wheel.set_dps(-inner_dps)
+    outer_wheel.set_dps(-outer_dps)
+    """
