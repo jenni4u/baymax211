@@ -1,4 +1,4 @@
-from motion import move_forward, reset
+from motion import move_forward, reset, turn
 from utils.brick import wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor
 
 # --- Constants --- #
@@ -68,6 +68,13 @@ def navigate_to_rooms():
         if payload_count == 0:
             break
         motion.turn(1) 
+        
+def simple_test(): 
+    edge = 0
+    while edge < 4: 
+        move_forward(72)
+        turn(1)
+        edge += 1
         
 # --- Start Navigation --- #
 navigate_to_rooms()
