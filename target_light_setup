@@ -1,0 +1,15 @@
+from utils.brick import wait_ready_sensors, EV3ColorSensor
+
+color_sensor = EV3ColorSensor(3)
+
+wait_ready_sensors(True)
+
+def get_redlight_value(): 
+  """
+    Place robot in desired position and function will return amount of reflected light 
+    value is between 0.0 (dark) to 1.0 (light)
+    """
+  print(color_sensor.get_red()) 
+
+
+get_redlight_value()
