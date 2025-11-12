@@ -1,4 +1,4 @@
-from utils.brick import Motor, wait_ready_sensors
+from utils.brick import Motor, time, BP, wait_ready_sensors
 import math
 import pendulum_mvt
 
@@ -27,11 +27,11 @@ print("System is ready!")
 
 
 
-def move_forward(distance):
+def move_robot(distance):
     """Move the robot forward by a certain distance."""
         
     RIGHT_WHEEL.set_speed(DPS)
-    LEFT_WHEEL.set_limits(DPS)
+    LEFT_WHEEL.set_speed(DPS)
     # rotate wheels
     LEFT_WHEEL.set_position_relative(distance * DISTTODEG)
     RIGHT_WHEEL.set_position_relative(distance * DISTTODEG)
@@ -46,10 +46,10 @@ def scan_room():
             if (total_distance>= MAX_ROOM_DISTANCE):
                 RIGHT_WHEEL.set_speed(0)
                 LEFT_WHEEL.set_speed(0)
-                move_forward(-(MAX_ROOM_DISTANCE + DISTANCE_PER_SCANNING))
+                move_robot(-(MAX_ROOM_DISTANCE + DISTANCE_PER_SCANNING))
                 break
-            move_forward(DISTANCE_PER_SCANNING)
-            total_forward += DISTANCE_PER_SCANNING
+            move_robot(DISTANCE_PER_SCANNING)
+            total_distance += DISTANCE_PER_SCANNING
             time.sleep(3)
             color = pendulum_mvt.find_color()
 
