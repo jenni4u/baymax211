@@ -1,5 +1,6 @@
-from utils.brick import Motor, time, BP, wait_ready_sensors
+from utils.brick import Motor, BP, wait_ready_sensors
 import math
+import time
 import pendulum_mvt
 
 # MOVEMENT PARAMETERS
@@ -67,9 +68,13 @@ def scan_room():
     except KeyboardInterrupt:
         LEFT_WHEEL.set_speed(0)
         RIGHT_WHEEL.set_speed(0) 
+        pendulum_mvt.motor.set_position(pendulum_mvt.INITIAL_POSITION)
+        pendulum_mvt.motor.set_dps(0)           
+        pendulum_mvt.motor.set_power(0)
         BP.reset_all()
 
     except BaseException as error:
+        print("Error during scan_room:", error)
         BP.reset_all()  
 
 
