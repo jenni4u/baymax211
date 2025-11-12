@@ -46,10 +46,10 @@ def color_sample():
                     count_green = 0
                     count_red = 0
 
-                if (count_green >=5)
+                if (count_green >=5):
                     return "green"
 
-                if (count_red >=5)
+                if (count_red >=5):
                     return "red"
         except SensorError:
             print("Color sensor read error")
@@ -101,7 +101,6 @@ def find_color():
             
     except SensorError as error:
         print("Sensor error:", error)
-        break
             
     except KeyboardInterrupt:
         motor.set_dps(MOTOR_DPS)
