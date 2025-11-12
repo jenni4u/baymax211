@@ -46,7 +46,10 @@ def scan_room():
             if (total_distance>= MAX_ROOM_DISTANCE):
                 RIGHT_WHEEL.set_speed(0)
                 LEFT_WHEEL.set_speed(0)
-                move_robot(-(MAX_ROOM_DISTANCE + DISTANCE_PER_SCANNING))
+                pendulum_mvt.motor.set_position(pendulum_mvt.INITIAL_POSITION)
+                pendulum_mvt.motor.set_dps(0)           
+                pendulum_mvt.motor.set_power(0)
+                move_robot(-(MAX_ROOM_DISTANCE + DISTANCE_PER_SCANNING/2))
                 break
             move_robot(DISTANCE_PER_SCANNING)
             total_distance += DISTANCE_PER_SCANNING
