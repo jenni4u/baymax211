@@ -1,73 +1,108 @@
 from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
 import math
+from typing import List
 # We follow the left edge of the line 
 
-# === Initialization ===
-left_motor = Motor("B")
-right_motor = Motor("C")
-color_sensor = EV3ColorSensor(1)                  
-
-wait_ready_sensors(True)
-
 # === Constants ===    
-BASE_SPEED = -150           
-KP = -1.3                   #adjusts sharpness of turns, the less the smoother
-TARGET = 20.0               # Color sensor is halfway between black and white, at the edge of a line 
-MAX_CORRECTION = 100
-BLACK_THRESHOLD = 10      # color sensor is placed at exact middle of line 
-WHITE_THRESHOLD = 36      # color sensor is on full white 
+BASE_SPEED     : int   = -150
+KP             : float = -1.3                   #adjusts sharpness of turns,                   the less the smoother
+TARGET         : float = 20.0               # Color sensor is halfway between black and white, at the edge of a line
+MAX_CORRECTION : int   = 100
+BLACK_THRESHOLD: int   = 10      # color sensor is placed at exact middle of line
+WHITE_THRESHOLD: int   = 36      # color sensor is on full white
 
 # MOVEMENT PARAMETERS
-DIAMETER = 4 #radius of wheel in cm
-CM_PER_DEG = (math.pi * DIAMETER) / 360  # Conversion factor from cm to degrees for 2 cm radius wheels
+DIAMETER  : float = 4 #radius of wheel in cm
+CM_PER_DEG: float = (math.pi * DIAMETER) / 360  # Conversion factor from cm to degrees for 2 cm radius wheels
 
 # === Intersection pattern ===
 # False = ignore and go straight
 # True = take 90° right turn
-intersection_pattern_north = [False, True, True, False, True, True, False, True, True, False, True]         #This is assuming we are starting facing North 
-intersection_pattern_south = []                                                                              #This is assuming we are starting facing East  
-intersections_counter = 0
+intersection_pattern_north: List[bool] = [False, True, True, False, True, True, False, True, True, False, True]         #This is assuming we are starting facing North
+intersection_pattern_south: List[bool] = []                                                                              #This is assuming we are starting facing East
+intersections_counter     : int        = 0
 
-# === Other variables ===
-last_black_time = 0
 
-# === Helper: 90° right turn ===
-def turn_right_90():
+def get_reflected_light_reading(color_sensor: EV3ColorSensor, scans: int = 3) -> float:
+    """
+    Average several color sensor readings for stability.
+    
+    Args:
+        color_sensor: EV3ColorSensor instance.
+        scans: Number of readings to average.
+    Returns:
+        Average reflected light value (0–100 scale).
+    """
+    total = 0
+    for i in range(scans):
+        total += color_sensor.get_red()
+    return total / scans
+
+
+def turn_right_90(left_motor: Motor,
+                  right_motor: Motor, 
+                  color_sensor: EV3ColorSensor, 
+                  target: float = TARGET
+                  ) -> None:
+    """ 
+    Performs a 90° right turn using the color sensor to detect the line 
+    
+    Args:
+        left_motor: Motor instance for the left wheel.
+        right_motor: Motor instance for the right wheel.
+        color_sensor: EV3ColorSensor instance.
+        target: Reflected light value to detect the line.
+    """
     # Rotate in place until black is detected again
     while True:
         left_motor.set_dps(100)
         right_motor.set_dps(-100)
-        if color_sensor.get_red() < TARGET:
+        if color_sensor.get_red() < target:
             break
      # Move forward a bit to stabilize onto the new line
     left_motor.set_dps(150)
     right_motor.set_dps(150)
-    #sleep(0.4)
+    busy_sleep(0.2)
+
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 
 
-# === Main Loop ===
-def move_straight(distance):
-    """ Follows left edge of the line, half on line half on white is ideal position
+def move_straight(left_motor: Motor, 
+                  right_motor: Motor, 
+                  color_sensor: EV3ColorSensor, 
+                  distance: float, 
+                  kp: float = KP, 
+                  target: float = TARGET, 
+                  base_speed: float = BASE_SPEED
+                  ) -> None:
+    """ 
+    Follows left edge of the line, half on line half on white is ideal position
     If sees too much black, will turn left 
     If sees too much white, will turn right 
+
+    Args:
+        left_motor: Motor instance for the left wheel.
+        right_motor: Motor instance for the right wheel.
+        color_sensor: EV3ColorSensor instance.
+        distance: Distance to move in cm (positive for forward, negative for backward).
+        kp: Proportional gain for correction.
+        target: Target reflected light value.
+        base_speed: Base speed of the motors.
     """
     
     left_motor.reset_encoder()
     right_motor.reset_encoder()
-    curr_dist = 0
+    curr_dist: float = 0.0
     
     while curr_dist < distance:
-          curr_val = 0
-          for i in range(3):             #maybe increase this 
-              curr_val += color_sensor.get_red()
-          curr_val = curr_val/3
+          curr_val: float = get_reflected_light_reading(color_sensor, 3)
           print("curr_val" + str(curr_val))
-          correction_factor = (curr_val - TARGET) * KP
+          correction_factor: float = (curr_val - target) * kp
           print("correction factor is: " + str(correction_factor))
-          left_motor.set_dps(BASE_SPEED + correction_factor)
-          right_motor.set_dps(BASE_SPEED - correction_factor)
+
+          left_motor.set_dps(base_speed + correction_factor)
+          right_motor.set_dps(base_speed - correction_factor)
           busy_sleep(0.09)               #maybe change this 
           
           # update curr_dist
@@ -79,10 +114,6 @@ def move_straight(distance):
           
     left_motor.set_dps(0)
     right_motor.set_dps(0)
-    
-      
-
-move_straight(86)
 
 
 
