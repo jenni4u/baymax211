@@ -1,0 +1,59 @@
+from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
+
+# We follow the right edge of the line 
+
+# === Initialization ===
+left_motor = Motor("B")
+right_motor = Motor("C")
+color_sensor = EV3ColorSensor(3)                  #TODO make sure this is right 
+
+wait_ready_sensors(True)
+
+# === Constants ===
+BASE_SPEED = 75
+KP = -0.6                   #TODO adjust sharpness of turns, the less the smoother, might need to make positive 
+TARGET = 50               # Halfway between black and white TODO adjust target n threshold values 
+MAX_CORRECTION = 100
+BLACK_THRESHOLD = 10      # full black
+WHITE_THRESHOLD = 85      # full white
+
+# === Intersection pattern ===
+# False = ignore and go straight
+# True = take 90° right turn
+intersection_pattern_north = [False, True, True, False, True, True, False, True, True, False, True]         #This is assuming we are starting facing North 
+intersection_pattern_south = []                                                                              #This is assuming we are starting facing East  
+intersections_counter = 0
+
+# === Other variables ===
+last_black_time = 0
+
+# === Helper: 90° right turn ===
+def turn_right_90():
+    # Rotate in place until black is detected again
+    while True:
+        left_motor.set_dps(100)
+        right_motor.set_dps(-100)
+        if color_sensor.get_red() < TARGET:
+            break
+     # Move forward a bit to stabilize onto the new line
+    left_motor.set_dps(150)
+    right_motor.set_dps(150)
+    #sleep(0.4)
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
+
+
+# === Main Loop ===
+def move_straight(): 
+  while True:
+      curr_val = color_sensor.get_red()
+      correction_factor = (curr_val - TARGET) * KP                  #If POSITIVE > we are steering towards the left (black side), if NEGATIVE > we are steering towards the right (white side)
+      left_motor.set_dps(BASE_SPEED + correction_factor)
+      right_motor.set_dps(BASE_SPEED - correction_factor)
+      
+
+
+
+
+
+     
