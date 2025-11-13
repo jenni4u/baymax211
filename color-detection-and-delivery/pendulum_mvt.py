@@ -8,11 +8,11 @@ INITIAL_POSITION = 0
 LEFT_POSITION = -45
 RIGHT_POSITION = 45
 MOTOR_DPS = 50
-TIME_SLEEP = 1
+TIME_SLEEP = 1.5
 
 #----- Color detection object -----#
 csa = ColorDetectionAlgorithm()
-COLOR_SENSOR = EV3ColorSensor(4)
+COLOR_SENSOR = EV3ColorSensor(1)
 color_found = False
 
 #------------- SETUP -------------#
@@ -35,22 +35,25 @@ def color_sample():
                 R, G, B, L = values
                 color = csa.classify_the_color(R, G, B)
                 print(color)
+                if color == "green" or color == "red":
+                    return color
+                
 
-                if color == "green":
-                    count_green+=1
-                    count_red = 0
-                elif color == "red":
-                    count_red+=1 
-                    count_green = 0
-                else:
-                    count_green = 0
-                    count_red = 0
-
-                if (count_green >=5):
-                    return "green"
-
-                if (count_red >=5):
-                    return "red"
+#                 if color == "green":
+#                     count_green+=1
+#                     count_red = 0
+#                 elif color == "red":
+#                     count_red+=1 
+#                     count_green = 0
+#                 else:
+#                     count_green = 0
+#                     count_red = 0
+# 
+#                 if (count_green >=5):
+#                     return "green"
+# 
+#                 if (count_red >=5):
+#                     return "red"
         except SensorError:
             print("Color sensor read error")
 
@@ -58,7 +61,7 @@ def color_sample():
     return None
 
 #---------- MAIN FUNCTION ----------#
-def find_color():
+def find_color(): #find_color()
     detected_color = None
 
     print('System is Ready!')
@@ -70,6 +73,8 @@ def find_color():
         motor.set_position(LEFT_POSITION)
         detected_color = color_sample()
         if detected_color:
+            motor.set_position(INITIAL_POSITION)
+            time.sleep(1)
             motor.set_dps(0)           
             motor.set_power(0)
             return detected_color
@@ -78,6 +83,8 @@ def find_color():
         motor.set_position(INITIAL_POSITION)
         detected_color = color_sample()
         if detected_color:
+            motor.set_position(INITIAL_POSITION)
+            time.sleep(1)
             motor.set_dps(0)           
             motor.set_power(0)
             return detected_color
@@ -86,14 +93,19 @@ def find_color():
         motor.set_position(RIGHT_POSITION)
         detected_color = color_sample()
         if detected_color:
+            motor.set_position(INITIAL_POSITION)
+            time.sleep(1)
             motor.set_dps(0)           
             motor.set_power(0)
+            
             return detected_color
 
 
         motor.set_position(INITIAL_POSITION)
         detected_color = color_sample()
         if detected_color:
+            motor.set_position(INITIAL_POSITION)
+            time.sleep(1)
             motor.set_dps(0)           
             motor.set_power(0)
             return detected_color
@@ -111,4 +123,4 @@ def find_color():
 
 #------------- RUNNING MAIN -------------#
 if __name__ == "__main__":
-    main()
+    find_color()
