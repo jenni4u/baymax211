@@ -70,7 +70,8 @@ def scan_room():
             elif color == "green":
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pendulum_mvt.detected_color_algorithm(pendulum_mvt.INITIAL_POSITION, 0, 0)
+                pendulum_mvt.set_dps_arms(0)
+                pendulum_mvt.set_power_arms(0)
                 time.sleep(1)
                 break
 
