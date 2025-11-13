@@ -18,9 +18,13 @@ color_found = False
 #------------- SETUP -------------#
 #ULTRASOUND_SENSOR = EV3UltrasonicSensor(2)
 #TOUCH_SENSOR = TouchSensor(1)
-motor = Motor("D")  
+motor_pendulum = Motor("D") 
+motor_block1 = Motor(3)  
+motor_block2 = Motor(4)  
 wait_ready_sensors()
-motor.reset_encoder()
+motor_pendulum.reset_encoder()
+motor_block1.reset_encoder()
+motor_block2.reset_encoder()
 
 
 #---------- COLOR CLASSIFICATION ----------#
@@ -60,6 +64,28 @@ def color_sample():
         time.sleep(0.05)
     return None
 
+def set_position_arms(position):
+    motor_pendulum.set_position(position)
+    motor_block1.set_position(position)
+    motor_block2.set_position(position)
+
+def set_dps_arms(dps):
+    motor_pendulum.set_dps(dps)
+    motor_block1.set_dps(dps)
+    motor_block2.set_dps(dps)
+
+def set_power_arms(power):
+    motor_pendulum.set_dps(power)
+    motor_block1.set_dps(power)
+    motor_block2.set_dps(power)
+
+def detected_color_algorithm(position, dps, power) :
+    set_position_arms(position)
+    time.sleep(1)
+    set_dps_arms(dps)
+    set_power_arms(power)
+
+
 #---------- MAIN FUNCTION ----------#
 def find_color(): #find_color()
     detected_color = None
@@ -67,47 +93,38 @@ def find_color(): #find_color()
     print('System is Ready!')
 
     try: 
-        #if TOUCH_SENSOR.is_pressed():
-                
-        motor.set_dps(MOTOR_DPS)
-        motor.set_position(LEFT_POSITION)
+        #if TOUCH_SENSOR.is_pressed(): 
+        set_dps_arms(MOTOR_DPS)
+        set_position_arms(LEFT_POSITION)
+
         detected_color = color_sample()
         if detected_color:
-            motor.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor.set_dps(0)           
-            motor.set_power(0)
+            detected_color_algorithm(INITIAL_POSITION, 0, 0)
             return detected_color
 
 
-        motor.set_position(INITIAL_POSITION)
+        set_position_arms(INITIAL_POSITION)
+  
         detected_color = color_sample()
         if detected_color:
-            motor.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor.set_dps(0)           
-            motor.set_power(0)
+            detected_color_algorithm(INITIAL_POSITION, 0, 0)
             return detected_color
 
 
-        motor.set_position(RIGHT_POSITION)
+        set_position_arms(RIGHT_POSITION)
+    
         detected_color = color_sample()
         if detected_color:
-            motor.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor.set_dps(0)           
-            motor.set_power(0)
-            
+            detected_color_algorithm(INITIAL_POSITION, 0, 0)
             return detected_color
 
 
-        motor.set_position(INITIAL_POSITION)
+        set_position_arms(INITIAL_POSITION)
+
+
         detected_color = color_sample()
         if detected_color:
-            motor.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor.set_dps(0)           
-            motor.set_power(0)
+            detected_color_algorithm(INITIAL_POSITION, 0, 0)
             return detected_color
             
             
@@ -115,8 +132,8 @@ def find_color(): #find_color()
         print("Sensor error:", error)
             
     except KeyboardInterrupt:
-        motor.set_dps(MOTOR_DPS)
-        motor.set_position(INITIAL_POSITION)
+        set_dps_arms(MOTOR_DPS)
+        set_position_arms(INITIAL_POSITION)
         time.sleep(1)
         BP.reset_all()
 

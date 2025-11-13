@@ -52,10 +52,7 @@ def scan_room():
             if (total_distance>= MAX_ROOM_DISTANCE):
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pendulum_mvt.motor.set_position(pendulum_mvt.INITIAL_POSITION)
-                time.sleep(1)
-                pendulum_mvt.motor.set_dps(0)           
-                pendulum_mvt.motor.set_power(0)
+                pendulum_mvt.detected_color_algorithm(pendulum_mvt.INITIAL_POSITION, 0, 0)
                 move_robot(-(MAX_ROOM_DISTANCE + DISTANCE_PER_SCANNING/2))
                 break
             move_robot(DISTANCE_PER_SCANNING)
@@ -66,17 +63,14 @@ def scan_room():
             if color == "red":
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pendulum_mvt.motor.set_position(pendulum_mvt.INITIAL_POSITION)
-                pendulum_mvt.motor.set_dps(0)           
-                pendulum_mvt.motor.set_power(0)
+                pendulum_mvt.detected_color_algorithm(pendulum_mvt.INITIAL_POSITION, 0, 0)
                 time.sleep(1)
                 move_robot(-DISTANCE_PER_SCANNING/2)
                 break
             elif color == "green":
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pendulum_mvt.motor.set_dps(0)           
-                pendulum_mvt.motor.set_power(0)
+                pendulum_mvt.detected_color_algorithm(pendulum_mvt.INITIAL_POSITION, 0, 0)
                 time.sleep(1)
                 break
 
@@ -84,9 +78,7 @@ def scan_room():
     except KeyboardInterrupt:
         LEFT_WHEEL.set_dps(0)
         RIGHT_WHEEL.set_dps(0) 
-        pendulum_mvt.motor.set_position(pendulum_mvt.INITIAL_POSITION)
-        pendulum_mvt.motor.set_dps(0)           
-        pendulum_mvt.motor.set_power(0)
+        pendulum_mvt.detected_color_algorithm(pendulum_mvt.INITIAL_POSITION, 0, 0)
         BP.reset_all()
 
     except BaseException as error:
