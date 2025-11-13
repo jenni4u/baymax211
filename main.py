@@ -1,5 +1,5 @@
 from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
-from line_follower import move_straight, turn_right_90
+from movement.line_follower import move_straight, turn_right_90
 
 # === Initialization ===
 left_motor = Motor("B")
