@@ -8,5 +8,5 @@ color_sensor = EV3ColorSensor(1, mode="red")
 
 wait_ready_sensors(True)
 
-move_straight(left_motor, right_motor, color_sensor, distance=50)
-turn_right_90(left_motor, right_motor, color_sensor)
+move_straight(left_motor, right_motor, color_sensor, distance=100)
+#turn_right_90(left_motor, right_motor, color_sensor)

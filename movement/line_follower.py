@@ -1,6 +1,7 @@
 from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
 import math
 from typing import List
+import time
 # We follow the left edge of the line 
 
 # === Constants ===    
@@ -21,6 +22,7 @@ CM_PER_DEG: float = (math.pi * DIAMETER) / 360  # Conversion factor from cm to d
 intersection_pattern_north: List[bool] = [False, True, True, False, True, True, False, True, True, False, True]         #This is assuming we are starting facing North
 intersection_pattern_south: List[bool] = []                                                                              #This is assuming we are starting facing East
 intersections_counter     : int        = 0
+counter                   : int        = 0
 
 
 def get_reflected_light_reading(color_sensor: EV3ColorSensor, scans: int = 3) -> float:
@@ -43,7 +45,7 @@ def turn_right_90(left_motor: Motor,
                   right_motor: Motor, 
                   color_sensor: EV3ColorSensor, 
                   target: float = TARGET
-                  ) -> None:
+                  ) -> float:
     """ 
     Performs a 90° right turn using the color sensor to detect the line 
     
@@ -52,17 +54,48 @@ def turn_right_90(left_motor: Motor,
         right_motor: Motor instance for the right wheel.
         color_sensor: EV3ColorSensor instance.
         target: Reflected light value to detect the line.
+    Returns: time taken to do the turn for undo function
     """
     # Rotate in place until black is detected again
+    curr_time = time.time()
     while True:
         left_motor.set_dps(100)
         right_motor.set_dps(-100)
-        if color_sensor.get_red() < target:
+        if color_sensor.get_red() <= target:
             break
+    done_time = time.time()
+    time_taken = done_time - curr_time
      # Move forward a bit to stabilize onto the new line
-    left_motor.set_dps(150)
-    right_motor.set_dps(150)
+    left_motor.set_dps(120)
+    right_motor.set_dps(120)
     busy_sleep(0.2)
+
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
+
+    return time_taken
+
+def undo_turn_right_90(  left_motor  : Motor,
+                        right_motor : Motor,
+                        time_taken  : float,
+                    ) -> None:
+    """ 
+    Performs a 90° left and back
+    
+    Args:
+        left_motor: Motor instance for the left wheel.
+        right_motor: Motor instance for the right wheel.
+        color_sensor: EV3ColorSensor instance.
+        target: Reflected light value to detect the line.
+    """
+    left_motor.set_dps(-120)
+    right_motor.set_dps(-120)
+    busy_sleep(0.2)
+
+    start_time = time.time()
+    while (time.time() - start_time) < time_taken:
+        left_motor.set_dps(-100)
+        right_motor.set_dps(100)
 
     left_motor.set_dps(0)
     right_motor.set_dps(0)
@@ -97,13 +130,16 @@ def move_straight(left_motor: Motor,
     
     while curr_dist < distance:
           curr_val: float = get_reflected_light_reading(color_sensor, 3)
+          if curr_val < 11:
+              time_taken = turn_right_90(left_motor, right_motor, color_sensor)
+              undo_turn_right_90(left_motor, right_motor, time_taken)
           print("curr_val" + str(curr_val))
           correction_factor: float = (curr_val - target) * kp
           print("correction factor is: " + str(correction_factor))
 
-          left_motor.set_dps(base_speed + correction_factor)
-          right_motor.set_dps(base_speed - correction_factor)
-          busy_sleep(0.09)               #maybe change this 
+          left_motor.set_dps(base_speed - correction_factor)
+          right_motor.set_dps(base_speed + correction_factor)
+          busy_sleep(0.1)               #maybe change this 
           
           # update curr_dist
           left_deg = left_motor.get_encoder()
