@@ -4,6 +4,7 @@ from typing import List
 import time
 # We follow the left edge of the line 
 
+#TODO: clean up the constants
 # === Constants ===    
 BASE_SPEED     : int   = -120
 KP             : float = -1.3                   #adjusts sharpness of turns,                   the less the smoother
@@ -39,6 +40,13 @@ def get_reflected_light_reading(color_sensor: EV3ColorSensor, scans: int = 3) ->
     for i in range(scans):
         total += color_sensor.get_red()
     return total / scans
+
+def stop():
+    """Stops the robot."""
+    left_motor = Motor("B")
+    right_motor = Motor("C")
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
 
 
 # def turn_right_90(left_motor: Motor,
@@ -134,7 +142,7 @@ def undo_turn_right_on_self(left_motor: Motor,
     Args:
         left_motor: Motor instance for the left wheel.
         right_motor: Motor instance for the right wheel.
-        diameter_axis: Distance between the two wheels (cm).
+        diameter_(axis: Distance between the two wheels (cm).
         radius: Radius of the wheels (cm).
         rps: Rotations per second for the motors.
     """
@@ -187,7 +195,6 @@ def simple_move_straight(left_motor: Motor,
     right_motor.set_dps(0)
     busy_sleep(2)
 
-    
 
 def move_straight(left_motor: Motor, 
                   right_motor: Motor, 
@@ -241,8 +248,69 @@ def move_straight(left_motor: Motor,
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 
+def smooth_turn(): #TODO: add all the parameters to be able to use function outside of this file
+    """
+    Turn the robot 90 degrees in the specified direction.
+    1 for right, 0 for left.
+    """
+    #TODO: clean these up and put them on top
+    # MOVEMENT PARAMETERS
+    RADIUS = 2 #radius of wheel in cm
+    DISTTODEG = 360 / (2 * math.pi * RADIUS)  # Conversion factor from cm to degrees for 2 cm radius wheels
+
+    # TURNING PARAMETERS
+    DISTANCE_WHEEL_FROM_CENTER = 5.51 #distance between wheels in cm
+    CENTER = 12
+    INNER_RADIUS = CENTER - DISTANCE_WHEEL_FROM_CENTER 
+    OUTER_RADIUS = CENTER + DISTANCE_WHEEL_FROM_CENTER
+
+    #TODO: to be removed
+    DPS = BASE_SPEED 
+    RIGHT_WHEEL = Motor("C")
+    LEFT_WHEEL = Motor("B")
+    color_sensor = EV3ColorSensor(3)
+    wait_ready_sensors()
+    print("System is ready!")
+
+    # Calculate the distance each wheel needs to travel for a 90 degree turn
+    inner_turn = 0.25 * (2 * math.pi * INNER_RADIUS)
+    outer_turn = 0.25 * (2 * math.pi * OUTER_RADIUS)
+    
+    # assumes robot only needs to turn left
+    # initialize inner and outer wheels
+    inner_wheel = LEFT_WHEEL
+    outer_wheel = RIGHT_WHEEL
+
+    # adjustment factors
+    inner_turn = 1*inner_turn
+    outer_turn = 1.03*outer_turn
 
 
+    # calculate a imaginary center wheel dps for reference
+    reference_turn = 0.25 * (2 * math.pi * CENTER)
+    time_turn = reference_turn * DISTTODEG / DPS
+
+    # calculate inner and outer wheel dps
+    inner_dps = inner_turn * DISTTODEG / time_turn   
+    outer_dps = outer_turn * DISTTODEG / time_turn    
+
+    # set wheel dps limits for turn
+    inner_wheel.set_dps(dps=inner_dps)
+    outer_wheel.set_dps(dps=outer_dps)
+    time.sleep(2)
+    turning = True
+    while turning:
+        curr_val = get_reflected_light_reading(color_sensor, 3)
+        # stop turning once target point has been reached
+        # kept flexible
+        if curr_val < TARGET:
+            stop()
+            turning = False
+            print("stopped")
+
+        
+
+   
 
 
      
