@@ -110,6 +110,7 @@ def find_color(): #find_color()
         set_dps_arms(MOTOR_DPS)
         set_position_arms(LEFT_POSITION)
 
+        print ("setted to left")
         detected_color = color_sample()
         if detected_color:
             detected_color_algorithm(INITIAL_POSITION, 0, 0)
