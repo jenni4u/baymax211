@@ -2,6 +2,7 @@ from utils.brick import Motor, TouchSensor, BP, wait_ready_sensors, EV3ColorSens
 from brickpi3 import SensorError
 from color_detection_algorithm import ColorDetectionAlgorithm
 import time
+import threading
 
 #----------- CONSTANTS -----------#
 INITIAL_POSITION = 0
@@ -12,15 +13,15 @@ TIME_SLEEP = 1.5
 
 #----- Color detection object -----#
 csa = ColorDetectionAlgorithm()
-COLOR_SENSOR = EV3ColorSensor(1)
+COLOR_SENSOR = EV3ColorSensor(3)
 color_found = False
 
 #------------- SETUP -------------#
 #ULTRASOUND_SENSOR = EV3UltrasonicSensor(2)
 #TOUCH_SENSOR = TouchSensor(1)
-motor_pendulum = Motor(4) 
+motor_pendulum = Motor("D") 
 motor_block = Motor("A")  
-
+#TEST = Motor("D")
 wait_ready_sensors()
 motor_pendulum.reset_encoder()
 motor_block.reset_encoder()
@@ -73,8 +74,6 @@ def move_motor_pendulum(): #find_color()
 
     try: 
         #if TOUCH_SENSOR.is_pressed(): 
-#         set_dps_arms(MOTOR_DPS)
-#         set_position_arms(LEFT_POSITION)
         
         motor_pendulum.set_dps(MOTOR_DPS)
         motor_pendulum.set_position(LEFT_POSITION)
@@ -88,12 +87,10 @@ def move_motor_pendulum(): #find_color()
             motor_pendulum.set_dps(0)
             motor_pendulum.set_power(0)
         
-            
-#             detected_color_algorithm(INITIAL_POSITION, 0, 0)
+
             return detected_color
 
 
-        #set_position_arms(INITIAL_POSITION)
         motor_pendulum.set_position(INITIAL_POSITION)
 
         detected_color = color_sample()
@@ -198,8 +195,7 @@ def move_motor_block(): #find_color()
             time.sleep(1)
             motor_block.set_dps(0)
             motor_block.set_power(0)
-            
-            #detected_color_algorithm(INITIAL_POSITION, 0, 0)
+
             return detected_color
             
             
@@ -212,18 +208,33 @@ def move_motor_block(): #find_color()
         time.sleep(1)
         BP.reset_all()
 
-
-#------------- RUNNING MAIN -------------#
-if __name__ == "__main__":
-    move_motor_pendulum()
-    
-    # Create threads each cycle
+def main_pendulum():
     motor_pendulum_thread = threading.Thread(target=move_motor_pendulum)
     motor_block_thread = threading.Thread(target=move_motor_block)
-
-    # Start them
+     
+    #     # Start them
     motor_pendulum_thread.start()
     motor_block_thread.start()
+        
 
     while True:
         time.sleep(2)
+    
+
+
+#------------- RUNNING MAIN -------------#
+if __name__ == "__main__":
+ 
+        
+        # Create threads each cycle
+        motor_pendulum_thread = threading.Thread(target=move_motor_pendulum)
+        motor_block_thread = threading.Thread(target=move_motor_block)
+     
+    #     # Start them
+        motor_pendulum_thread.start()
+        motor_block_thread.start()
+        
+        
+
+        #while True:
+            #time.sleep(2)
