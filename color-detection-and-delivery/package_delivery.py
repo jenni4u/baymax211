@@ -52,8 +52,8 @@ def deliver_package():
         else :
             pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
             pendulum_mvt.motor_pendulum.set_position(degree_rotation)
-            pendulum_mvt.motor_block1.set_dps(pendulum_mvt.MOTOR_DPS)
-            pendulum_mvt.motor_block1.set_position(degree_rotation)
+            pendulum_mvt.motor_block.set_dps(pendulum_mvt.MOTOR_DPS)
+            pendulum_mvt.motor_block.set_position(degree_rotation)
 
             time.sleep(0.5)
 

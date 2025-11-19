@@ -58,7 +58,7 @@ def scan_room():
             move_robot(DISTANCE_PER_SCANNING)
             total_distance += DISTANCE_PER_SCANNING
             time.sleep(1)
-            color = pendulum_mvt.find_color()
+            color = pendulum_mvt.move_motor_pendulum()
 
             if color == "red":
                 RIGHT_WHEEL.set_dps(0)
