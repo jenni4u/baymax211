@@ -32,7 +32,9 @@ def color_sample():
     counter_green = 0
     counter_red = 0
 
-    for _ in range(int(TIME_SLEEP / 0.05)):
+    global detected_color, stop
+
+    while not stop:
         try:
             values = COLOR_SENSOR.get_value()
             if values:
@@ -40,7 +42,9 @@ def color_sample():
                 color = csa.classify_the_color(R, G, B)
                 #print(color)
                 if color == "green" or color == "red":
-                    return color
+                    detected_color = color
+                    stop = True
+                    return 
                 
 
 #                 if color == "green":
@@ -68,7 +72,9 @@ def color_sample():
 
 #---------- MAIN FUNCTION ----------#
 def move_motor_pendulum(): #find_color()
-    detected_color = None
+
+    global stop
+
 
     print('System is Ready!')
 
@@ -76,57 +82,18 @@ def move_motor_pendulum(): #find_color()
         #if TOUCH_SENSOR.is_pressed(): 
         
         motor_pendulum.set_dps(MOTOR_DPS)
-        motor_pendulum.set_position(LEFT_POSITION)
 
-  
-    
-        detected_color = color_sample()
-        if detected_color:
-            motor_pendulum.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor_pendulum.set_dps(0)
-            motor_pendulum.set_power(0)
+        for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
         
+            if stop:
+                break
 
-            return detected_color
-
-
-        motor_pendulum.set_position(INITIAL_POSITION)
-
-        detected_color = color_sample()
-        if detected_color:
-            motor_pendulum.set_position(INITIAL_POSITION)
+            motor_pendulum.set_position(pos)
             time.sleep(1)
-            motor_pendulum.set_dps(0)
-            motor_pendulum.set_power(0)
-            return detected_color
+
+        motor_pendulum.set_dps(0)
 
 
-        motor_pendulum.set_position(RIGHT_POSITION)
-    
-        detected_color = color_sample()
-        if detected_color:
-            motor_pendulum.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor_pendulum.set_dps(0)
-            motor_pendulum.set_power(0)
-
-            return detected_color
-
-
-
-        motor_pendulum.set_position(INITIAL_POSITION)
-
-
-
-        detected_color = color_sample()
-        if detected_color:
-            motor_pendulum.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor_pendulum.set_dps(0)
-            motor_pendulum.set_power(0)
-
-            return detected_color
             
             
     except SensorError as error:
@@ -140,101 +107,46 @@ def move_motor_pendulum(): #find_color()
 
 
 def move_motor_block(): #find_color()
-    detected_color = None
+    global stop_signal
+    motor_block.set_dps(MOTOR_DPS)
 
-    print('System is Ready!')
-
-    try: 
-        #if TOUCH_SENSOR.is_pressed(): 
+    for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
         
-        motor_block.set_dps(MOTOR_DPS)
-        motor_block.set_position(LEFT_POSITION)
-  
-    
-        detected_color = color_sample()
-        if detected_color:
-            motor_block.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor_block.set_dps(0)
-            motor_block.set_power(0)
-            
-            return detected_color
+        if stop:
+            break
 
-
-        motor_block.set_position(INITIAL_POSITION)
-
-        detected_color = color_sample()
-        if detected_color:
-            motor_block.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor_block.set_dps(0)
-            motor_block.set_power(0)
-            
-            return detected_color
-
-
-
-        motor_block.set_position(RIGHT_POSITION)
-    
-        detected_color = color_sample()
-        if detected_color:
-            motor_block.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor_block.set_dps(0)
-            motor_block.set_power(0)
-
-            return detected_color
-
-
-        motor_block.set_position(INITIAL_POSITION) 
-
-
-        detected_color = color_sample()
-        if detected_color:
-            motor_block.set_position(INITIAL_POSITION)
-            time.sleep(1)
-            motor_block.set_dps(0)
-            motor_block.set_power(0)
-
-            return detected_color
-            
-            
-    except SensorError as error:
-        print("Sensor error:", error)
-            
-    except KeyboardInterrupt:
-        motor_block.set_dps(MOTOR_DPS)
-        motor_block.set_position(INITIAL_POSITION)
+        motor_block.set_position(pos)
         time.sleep(1)
-        BP.reset_all()
+
+    motor_block.set_dps(0)
+
 
 def main_pendulum():
-    motor_pendulum_thread = threading.Thread(target=move_motor_pendulum)
-    motor_block_thread = threading.Thread(target=move_motor_block)
-     
-    #     # Start them
-    motor_pendulum_thread.start()
-    motor_block_thread.start()
-        
+    global detected_color, stop
+    detected_color = None
+    stop = False
 
-    while True:
-        time.sleep(2)
-    
+    try:
+
+        color_thread = threading.Thread(target=color_sample)
+        move_pendulum_thread = threading.Thread(target=move_motor_pendulum)
+        move_block_thread = threading.Thread(target=move_motor_block)
+
+        color_thread.start()
+        move_pendulum_thread.start()
+        move_block_thread.start()
+
+        return detected_color
+
+    except KeyboardInterrupt:
+       
+        motor_pendulum.set_dps(0)
+        motor_block.set_dps(0)
+        stop = True
+        return None
 
 
 #------------- RUNNING MAIN -------------#
 if __name__ == "__main__":
  
-        
-        # Create threads each cycle
-        motor_pendulum_thread = threading.Thread(target=move_motor_pendulum)
-        motor_block_thread = threading.Thread(target=move_motor_block)
-     
-    #     # Start them
-        motor_pendulum_thread.start()
-        motor_block_thread.start()
-        
-        
-
-        #while True:
-            #time.sleep(2)
+    main_pendulum()
