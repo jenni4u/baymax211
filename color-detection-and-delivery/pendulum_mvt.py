@@ -3,7 +3,7 @@ from brickpi3 import SensorError
 from color_detection_algorithm import ColorDetectionAlgorithm
 import time
 import threading
-from utils import sound
+from utils.sound import play_success
 
 
 #----------- CONSTANTS -----------#
@@ -13,7 +13,7 @@ RIGHT_POSITION = 45
 MOTOR_DPS = 100
 TIME_SLEEP = 1.5
 
-SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
+#SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
 
 #----- Color detection object -----#
 csa = ColorDetectionAlgorithm()
@@ -62,7 +62,7 @@ def color_sample():
                     stop = True
                     motor_pendulum.set_dps(0)
                     motor_block.set_dps(0)
-                    SOUND_GREEN.play()
+                    play_success
                     
                 else:
                     color = None

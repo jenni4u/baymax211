@@ -744,6 +744,20 @@ def _test_vol1():
     while (ans := input("Enter volume (100-0): ")) and ans.count('.') <= 1 and ans.replace('.', '').isnumeric():
         Sound(volume=float(ans)).play().wait_done()
 
+def play_wav(file_path: str):
+    wave_obj = sa.WaveObject.from_wave_file(file_path)
+    play_obj = wave_obj.play()
+    play_obj.wait_done()
+
+def play_success():
+    play_wav("sounds/balalala.wav")
+
+def play_start():
+    play_wav("sounds/baymax.wav")
+
+def play_complete():
+    play_wav("sounds\you-have-been-a-good-boy-lollipop.wav")
 
 if __name__ == '__main__':
     _test_vol1()
+
