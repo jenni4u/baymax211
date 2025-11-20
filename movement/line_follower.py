@@ -7,12 +7,12 @@ import time
 # CONTROL PARAMETERS
 BASE_SPEED = -120       # default wheel DPS
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
-TARGET = 35.0           # Color sensor is halfway between black and white, at the edge of a line
+TARGET = 20.0           # Color sensor is halfway between black and white, at the edge of a line
 TARGET_THRESHOLD = 10   # acceptable error range from target
 MAX_CORRECTION = 100
-BLACK_THRESHOLD = 15    # color sensor is placed at exact middle of line
+BLACK_THRESHOLD = 10   # color sensor is placed at exact middle of line
 WHITE_THRESHOLD = 36    # color sensor is on full white
-INTERSECTION = 15
+INTERSECTION = 7
 ROOM = 0
 ST_ROOM = 1
 NEW_EDGE = 2
@@ -62,7 +62,7 @@ def stop(left_motor: Motor = LEFT_WHEEL,
     right_motor.set_dps(0)
 
 
-def turn_right_on_self(left_motor: Motor = LEFT_WHEEL, 
+def turn_left_on_self(left_motor: Motor = LEFT_WHEEL, 
                        right_motor: Motor = RIGHT_WHEEL, 
                        diameter_axis: int = 12.00, 
                        radius: float = DIAMETER/2, 
@@ -76,16 +76,16 @@ def turn_right_on_self(left_motor: Motor = LEFT_WHEEL,
         radius: Radius of the wheels (cm).
         rps: Rotations per second for the motors.
     """
-    time_needed = (95 * diameter_axis) / (2 * abs(dps) * radius)
+    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
     while time.time() < stop_time:
-        left_motor.set_dps(dps)
-        right_motor.set_dps(-dps)
+        left_motor.set_dps(-dps)
+        right_motor.set_dps(dps)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
     busy_sleep(1)
     
-def undo_turn_right_on_self(left_motor: Motor = LEFT_WHEEL,
+def undo_turn_left_on_self(left_motor: Motor = LEFT_WHEEL,
                             right_motor: Motor = RIGHT_WHEEL, 
                             diameter_axis: int = 12.00, 
                             radius: int = DIAMETER/2, 
@@ -99,11 +99,11 @@ def undo_turn_right_on_self(left_motor: Motor = LEFT_WHEEL,
         radius: Radius of the wheels (cm).
         rps: Rotations per second for the motors.
     """
-    time_needed = (95 * diameter_axis) / (2 * abs(dps) * radius)
+    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
     while time.time() < stop_time:
-        left_motor.set_dps(-dps)
-        right_motor.set_dps(dps)
+        left_motor.set_dps(dps)
+        right_motor.set_dps(-dps)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
     busy_sleep(1)
@@ -112,13 +112,22 @@ def move_forward(distance,
                  left_wheel: Motor = LEFT_WHEEL,
                  right_wheel: Motor= RIGHT_WHEEL) -> None:
     """Move the robot forward by a certain distance."""
-    distance = -distance
-    right_wheel.set_limits(100, dps=BASE_SPEED)
-    left_wheel.set_limits(100, dps=BASE_SPEED)   
-    # rotate wheels
-    left_wheel.set_position_relative(distance * DISTTODEG)
-    right_wheel.set_position_relative(distance * DISTTODEG)
+    # set motor limits (use absolute DPS for limits)
+    right_wheel.set_limits(100, dps=abs(BASE_SPEED))
+    left_wheel.set_limits(100, dps=abs(BASE_SPEED))
 
+    # convert absolute distance (cm) to wheel degrees
+    degrees = abs(distance) * DISTTODEG
+
+    if distance >= 0:
+        # forward: use same sign convention as previous implementation
+        left_wheel.set_position_relative(-degrees)
+        right_wheel.set_position_relative(-degrees)
+    else:
+        # reverse: rotate wheels in opposite direction
+        left_wheel.set_position_relative(degrees)
+        right_wheel.set_position_relative(degrees)
+    busy_sleep(2)
 
 def move_straight_distance(distance: float,
                          left_motor: Motor = LEFT_WHEEL, 
@@ -141,10 +150,7 @@ def move_straight_distance(distance: float,
 
     curr_degrees = (left_motor.get_encoder() + right_motor.get_encoder())/2
     print("curr_degrees: " + str(curr_degrees))
-    if forward:
-        degrees_to_achieve = curr_degrees - distance/CM_PER_DEG
-    else:
-        degrees_to_achieve = curr_degrees + distance/CM_PER_DEG
+    degrees_to_achieve = curr_degrees - distance/CM_PER_DEG
     print("degrees_to_achieve: " + str(degrees_to_achieve))
 
     #Need to give it a little boost to get out of only black
@@ -159,11 +165,16 @@ def move_straight_distance(distance: float,
     right_motor.set_dps(0)
 
     if forward:
+        #-1800 > -2400
         while (left_motor.get_encoder() + right_motor.get_encoder())/2 > degrees_to_achieve: #signs are flipped due to degrees being negative
             print("moving straight")
             print("Degrees left to achieve: " + str(((left_motor.get_encoder() + right_motor.get_encoder())/2 - degrees_to_achieve)))
             curr_val: float = get_reflected_light_reading(color_sensor, 3) 
-            correction_factor: float = (curr_val - target) * KP
+            correction_factor: float = -(curr_val - target) * KP
+            if correction_factor > 0:
+                print("turning right")
+            else:
+                print("turning left")
             left_motor.set_dps(speed - correction_factor)
             right_motor.set_dps(speed + correction_factor)
             busy_sleep(0.03)               
@@ -171,11 +182,12 @@ def move_straight_distance(distance: float,
         right_motor.set_dps(0)
         busy_sleep(2)
     else:
+        #-1800 < -1200
         while (left_motor.get_encoder() + right_motor.get_encoder())/2 < degrees_to_achieve: 
             print("moving straight backwards")
             print("Degrees left to achieve: " + str((degrees_to_achieve - (left_motor.get_encoder() + right_motor.get_encoder())/2)))
             curr_val: float = get_reflected_light_reading(color_sensor, 3) 
-            correction_factor: float = (curr_val - target) * KP
+            correction_factor: float = -(curr_val - target) * KP
             left_motor.set_dps(-speed - correction_factor)
             right_motor.set_dps(-speed + correction_factor)
             busy_sleep(0.03)               
@@ -303,13 +315,16 @@ def line_follower(direction: bool = True,
           print("curr_val" + str(curr_val))
         
           # Calculate correction factor
-          correction_factor: float = (curr_val - target) * kp
+          correction_factor: float = -(curr_val - target) * kp
           print("correction factor is: " + str(correction_factor))
 
           # Apply correction to motor speeds, corrected with direction
           left_motor.set_dps((base_speed - correction_factor) * direction)
           right_motor.set_dps((base_speed + correction_factor) * direction)
-          busy_sleep(0.05)
+          busy_sleep(0.03)
+          curr_val: float = get_reflected_light_reading(color_sensor, 3)
+          print("curr_val" + str(curr_val))
+
 
     left_motor.set_dps(0)
     right_motor.set_dps(0)
