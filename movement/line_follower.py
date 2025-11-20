@@ -215,7 +215,7 @@ def test_turn(left_motor: Motor = LEFT_WHEEL,
             turning = False
             stop()
             print("stopped")
-            # move_straight_distance(5) #move a bit forward to stabilize on line
+            line_follower()
 
 
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
