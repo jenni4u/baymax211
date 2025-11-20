@@ -1,7 +1,7 @@
 from utils.brick import Motor, BP, wait_ready_sensors
 import math
 import time
-import pendulum_mvt as pdm
+import pendulum_mvt
 
 # MOVEMENT PARAMETERS
 RADIUS = 2 #radius of wheel in cm
@@ -17,7 +17,7 @@ OUTER_RADIUS = CENTER + DISTANCE_WHEEL_FROM_CENTER
 DPS =50 # speed of the robot
 CHECK_TURN = -10 # distance outer wheel travels in entrance check turn
 
-MAX_ROOM_DISTANCE = 21 #cm
+MAX_ROOM_DISTANCE = 19 #cm
 DISTANCE_PER_SCANNING = 2.8
 
 # Initialize motors
@@ -52,27 +52,25 @@ def scan_room():
             if (total_distance>= MAX_ROOM_DISTANCE):
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pdm.motor_pendulum.set_position(pdm.INITIAL_POSITION)
+                pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
                 time.sleep(1)
-                pendulum_mvt.motor_pendulum.set_dps(0)
-                pdm.motor_block.set_position(pdm.INITIAL_POSITION)
-                time.sleep(0.5)
-                pdm.motor_block.set_dps(0)
-                move_robot(-(MAX_ROOM_DISTANCE + DISTANCE_PER_SCANNING/2.5), 250)
+                pendulum_mvt.motor_pendulum.set_dps(0)           
+                pendulum_mvt.motor_pendulum.set_power(0)
+                move_robot(-(MAX_ROOM_DISTANCE + DISTANCE_PER_SCANNING/2), 250)
                 break
             move_robot(DISTANCE_PER_SCANNING, 150)
             print("robot moving")
             total_distance += DISTANCE_PER_SCANNING
             time.sleep(1.5)
             print("starting pendulum")
-            color = pdm.main_pendulum()
+            color = pendulum_mvt.main_pendulum()
           
             if color == "red":
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pdm.motor_pendulum.set_dps(0)
-                pdm.motor_block.set_dps(0) 
-
+                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_block.set_dps(0) 
+#                 pendulum_mvt.motor_pendulum.set_power(0)
                 time.sleep(1.5)
                 move_robot(-DISTANCE_PER_SCANNING, 150)
                 break
@@ -81,15 +79,14 @@ def scan_room():
                 print("ENTER DELIVERY LOGIC")
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pdm.motor_pendulum.set_dps(0)
-                pdm.motor_block.set_dps(0)
-                time.sleep(6)
+                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_block.set_dps(0) 
 
                 print("SUCCESSFULYY STOPPED THE MOVEMENT")
                 
                 
                 degree_rotation = 0
-                if(pdm.motor_pendulum.get_position() < 0):
+                if(pendulum_mvt.motor_pendulum().get_position < 0):
                     degree_rotation = 5
                 else :
                     degree_rotation = -5
@@ -97,32 +94,41 @@ def scan_room():
                 print("degree rotation", degree_rotation)
 
 
-                pdm.motor_pendulum.set_dps(50)
-                pdm.motor_pendulum.set_position(degree_rotation)
+                pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
+                pendulum_mvt.motor_pendulum.set_position(degree_rotation)
                 time.sleep(0.5)
 
-                pdm.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_pendulum.set_dps(0)
 
                 print("SUCCESSFULLY MOVED THE COLOR ARM")
 
 
-                move_robot(DISTANCE_PER_SCANNING, 100)
+                move_robot(DISTANCE_PER_SCANNING/2, 100)
                 time.sleep(0.3)
-                pdm.motor_pendulum.set_dps(50)
-                pdm.motor_block.set_dps(pdm.MOTOR_DPS)
-                pdm.motor_pendulum.set_position(pdm.INITIAL_POSITION)
+                pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
+                pendulum_mvt.motor_block.set_dps(pendulum_mvt.MOTOR_DPS)
+                pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
                 time.sleep(1)
-                pdm.motor_pendulum.set_dps(0)
-                pdm.motor_block.set_position(pdm.INITIAL_POSITION)
+                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_block.set_position(pendulum_mvt.INITIAL_POSITION)
 
                 time.sleep(1)  
-                pdm.motor_block.set_dps(0)
+                pendulum_mvt.motor_block.set_dps(0)
 
            
-                move_robot(-(total_distance - DISTANCE_PER_SCANNING))
+                move_robot(total_distance - DISTANCE_PER_SCANNING/2)
                 time.sleep(4)
                 total_distance = 0
                 break
+
+
+    except KeyboardInterrupt:
+        LEFT_WHEEL.set_dps(0)
+        RIGHT_WHEEL.set_dps(0) 
+        pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
+        pendulum_mvt.motor_pendulum.set_dps(0)           
+        #pendulum_mvt.motor.set_power(0)
+        BP.reset_all()
 
     except BaseException as error:
         print("Error during scan_room:", error)

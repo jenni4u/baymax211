@@ -8,8 +8,8 @@ from utils import sound
 
 #----------- CONSTANTS -----------#
 INITIAL_POSITION = 0
-LEFT_POSITION = -50
-RIGHT_POSITION = 50
+LEFT_POSITION = -45
+RIGHT_POSITION = 45
 MOTOR_DPS = 150
 TIME_SLEEP = 1.5
 
@@ -100,13 +100,8 @@ def move_motor_pendulum():
     
     if stop:
         motor_pendulum.set_dps(0)
-    elif(motor_pendulum.get_position() == 0):
-         motor_pendulum.set_position(LEFT_POSITION)
-         time.sleep(1)
-         motor_pendulum.set_position(RIGHT_POSITION)
-         time.sleep(1)
-         
-    elif(motor_pendulum.get_position() > 0) :
+        
+    elif(motor_pendulum.get_position() >= 0) :
         motor_pendulum.set_position(LEFT_POSITION)
         time.sleep(1)
     else :
@@ -132,12 +127,7 @@ def move_motor_block():
     if stop:
         motor_block.set_dps(0)
         
-    elif(motor_block.get_position() == 0):
-         motor_block.set_position(LEFT_POSITION)
-         time.sleep(1)
-         motor_block.set_position(RIGHT_POSITION)
-         time.sleep(1)
-    elif(motor_block.get_position() > 0) :
+    elif(motor_block.get_position() >= 0) :
         motor_block.set_position(LEFT_POSITION)
         time.sleep(1)
     else :
