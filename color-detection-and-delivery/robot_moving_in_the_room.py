@@ -69,7 +69,8 @@ def scan_room():
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
                 pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
-                pendulum_mvt.motor_pendulum.set_dps(0)           
+                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_block.set_dps(0) 
 #                 pendulum_mvt.motor_pendulum.set_power(0)
                 time.sleep(1.5)
                 move_robot(-DISTANCE_PER_SCANNING, 150)
@@ -78,7 +79,8 @@ def scan_room():
                 
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pendulum_mvt.motor_pendulum.set_dps(0)           
+                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_block.set_dps(0) 
                 #pendulum_mvt.motor_pendulum.set_power(0)
                 time.sleep(1)
                 break

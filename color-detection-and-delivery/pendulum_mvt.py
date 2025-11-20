@@ -10,7 +10,7 @@ from utils import sound
 INITIAL_POSITION = 0
 LEFT_POSITION = -45
 RIGHT_POSITION = 45
-MOTOR_DPS = 100
+MOTOR_DPS = 150
 TIME_SLEEP = 1.5
 
 SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
@@ -98,7 +98,7 @@ def move_motor_pendulum():
         
     motor_pendulum.set_dps(MOTOR_DPS)
 
-    for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
+    for pos in [LEFT_POSITION, RIGHT_POSITION]:
         
         if stop:
             motor_pendulum.set_dps(0)
@@ -122,7 +122,7 @@ def move_motor_block():
         
     motor_block.set_dps(MOTOR_DPS)
 
-    for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
+    for pos in [LEFT_POSITION, RIGHT_POSITION]:
         
         if stop:
             motor_block.set_dps(0)
@@ -165,12 +165,6 @@ def main_pendulum():
 
         return detected_color
 
-    except KeyboardInterrupt:
-       
-        motor_pendulum.set_dps(0)
-        motor_block.set_dps(0)
-        stop = True
-        BP.reset_all()
         
     except SensorError as error:
        
