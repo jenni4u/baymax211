@@ -76,10 +76,14 @@ def scan_room():
                 break
             elif color == "green":
                 
+                print("ENTER DELIVERY LOGIC")
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
                 pendulum_mvt.motor_pendulum.set_dps(0)
                 pendulum_mvt.motor_block.set_dps(0) 
+
+                print("SUCCESSFULYY STOPPED THE MOVEMENT")
+                
                 
                 degree_rotation = 0
                 if(pendulum_mvt.motor_pendulum().get_position < 0):
@@ -87,12 +91,16 @@ def scan_room():
                 else :
                     degree_rotation = -5
 
+                print("degree rotation", degree_rotation)
+
 
                 pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
                 pendulum_mvt.motor_pendulum.set_position(degree_rotation)
                 time.sleep(0.5)
 
                 pendulum_mvt.motor_pendulum.set_dps(0)
+
+                print("SUCCESSFULLY MOVED THE COLOR ARM")
 
 
                 move_robot(DISTANCE_PER_SCANNING/2, 100)
