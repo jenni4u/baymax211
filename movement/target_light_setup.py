@@ -1,4 +1,4 @@
-from utils.brick import wait_ready_sensors, EV3ColorSensor, busy_sleep
+from ..utils.brick import wait_ready_sensors, EV3ColorSensor, busy_sleep
 
 def get_redlight_value(color_sensor): 
   """

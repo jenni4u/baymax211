@@ -1,4 +1,4 @@
-from ..utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
+from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
 import math
 import time
 # We follow the left edge of the line 
@@ -8,9 +8,9 @@ import time
 BASE_SPEED = -120       # default wheel DPS
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
 TARGET = 35.0           # Color sensor is halfway between black and white, at the edge of a line
-BLACK = 15              # color sensor reading for black on full line
+TARGET_THRESHOLD = 10   # acceptable error range from target
 MAX_CORRECTION = 100
-BLACK_THRESHOLD = 10    # color sensor is placed at exact middle of line
+BLACK_THRESHOLD = 15    # color sensor is placed at exact middle of line
 WHITE_THRESHOLD = 36    # color sensor is on full white
 INTERSECTION = 15
 ROOM = 0
@@ -194,13 +194,11 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
         
         # stop turning once target point has been reached
         # kept flexible
-        if curr_val < BLACK: 
-            # stop robot, but let outer wheel roll for a little longer
-            # to offset robot onto the left edge of path
-            inner_wheel.set_dps(0)
-            time.sleep(0.1)
-            outer_wheel.set_dps(0)
-
+        if curr_val < BLACK_THRESHOLD: 
+            # continue turning until we find target spot again
+            while curr_val < TARGET - :
+                curr_val = get_reflected_light_reading(color_sensor, 3)
+                continue          
             turning = False
             print("stopped")
             move_straight(5) #move a bit forward to stabilize on line
