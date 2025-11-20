@@ -11,6 +11,10 @@ TARGET = 35.0  # Color sensor is halfway between black and white, at the edge of
 MAX_CORRECTION = 100
 BLACK_THRESHOLD = 10    # color sensor is placed at exact middle of line
 WHITE_THRESHOLD = 36    # color sensor is on full white
+INTERSECTION = 15
+ROOM = 0
+ST_ROOM = 1
+NEW_EDGE = 2
 
 # MOVEMENT PARAMETERS
 DIAMETER = 4.0 #radius of wheel in cm
@@ -25,10 +29,10 @@ wait_ready_sensors()
 print("System is ready!")
 
 # INTERSECTION PATTERN
-intersection_pattern_north = [False, True, True,    # False = ignore and go straight
-                              False, True, True,    # True = take 90° right turn
-                              False, True, True,    # This is assuming we are starting facing North
-                              False, True]         
+intersection_pattern_north = [ST_ROOM, NEW_EDGE, ROOM,    # False = ignore and go straight
+                              ST_ROOM, NEW_EDGE, ROOM,    # True = take 90° right turn
+                              ST_ROOM, NEW_EDGE, ROOM,    # This is assuming we are starting facing North
+                              ST_ROOM, ROOM]         
 intersection_pattern_south = []                                                                              #This is assuming we are starting facing East
 intersections_counter = 0
 counter = 0
@@ -144,58 +148,6 @@ def simple_move_straight(distance: float,
     busy_sleep(2)
 
 
-def move_straight(distance: float, 
-                  left_motor: Motor = LEFT_WHEEL, 
-                  right_motor: Motor = RIGHT_WHEEL, 
-                  color_sensor: EV3ColorSensor = COLOR_SENSOR,
-                  kp: float = KP, 
-                  target: float = TARGET, 
-                  base_speed: float = BASE_SPEED
-                  ) -> None:
-    """ 
-    Follows left edge of the line, half on line half on white is ideal position
-    If sees too much black, will turn left 
-    If sees too much white, will turn right 
-
-    Args:
-        left_motor: Motor instance for the left wheel.
-        right_motor: Motor instance for the right wheel.
-        color_sensor: EV3ColorSensor instance.
-        distance: Distance to move in cm (positive for forward, negative for backward).
-        kp: Proportional gain for correction.
-        target: Target reflected light value.
-        base_speed: Base speed of the motors.
-    """
-    
-    left_motor.reset_encoder()
-    right_motor.reset_encoder()
-    curr_dist: float = 0.0
-    
-    while curr_dist < distance:
-          curr_val: float = get_reflected_light_reading(color_sensor, 3)
-          print("curr_val" + str(curr_val))
-          if curr_val < 15:
-              simple_move_straight(left_motor, right_motor, color_sensor, 17.5)              
-              turn_right_on_self(left_motor, right_motor)
-              undo_turn_right_on_self(left_motor, right_motor)
-            
-          correction_factor: float = (curr_val - target) * kp
-          print("correction factor is: " + str(correction_factor))
-
-          left_motor.set_dps(base_speed - correction_factor)
-          right_motor.set_dps(base_speed + correction_factor)
-          busy_sleep(0.05) #TODO: maybe change this 
-          
-          # update curr_dist
-          left_deg = left_motor.get_encoder()
-          right_deg = right_motor.get_encoder()
-          curr_dist = -(((left_deg + right_deg) / 2) * CM_PER_DEG)
-          print("curr_dist is:" + str(curr_dist))
-          
-    left_motor.set_dps(0)
-    right_motor.set_dps(0)
-
-
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
                 right_motor: Motor = RIGHT_WHEEL,
                 color_sensor: EV3ColorSensor = COLOR_SENSOR): #TODO: add all the parameters to be able to use function outside of this file
@@ -247,7 +199,64 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
             simple_move_straight(5) #move a bit forward to stabilize on line
 
         
+def move_straight(distance: float, 
+                  left_motor: Motor = LEFT_WHEEL, 
+                  right_motor: Motor = RIGHT_WHEEL, 
+                  color_sensor: EV3ColorSensor = COLOR_SENSOR,
+                  kp: float = KP, 
+                  target: float = TARGET, 
+                  base_speed: float = BASE_SPEED
+                  ) -> None:
+    """ 
+    Follows left edge of the line, half on line half on white is ideal position
+    If sees too much black, will turn left 
+    If sees too much white, will turn right 
 
+    Args:
+        left_motor: Motor instance for the left wheel.
+        right_motor: Motor instance for the right wheel.
+        color_sensor: EV3ColorSensor instance.
+        distance: Distance to move in cm (positive for forward, negative for backward).
+        kp: Proportional gain for correction.
+        target: Target reflected light value.
+        base_speed: Base speed of the motors.
+    """
+    
+    left_motor.reset_encoder()
+    right_motor.reset_encoder()
+    curr_dist: float = 0.0
+    
+    while curr_dist < distance:
+          curr_val: float = get_reflected_light_reading(color_sensor, 3)
+          print("curr_val" + str(curr_val))
+          if curr_val < INTERSECTION:
+              global counter
+              pattern = intersection_pattern_north[counter]
+              if pattern == ROOM:
+                  simple_move_straight(17.5, left_motor, right_motor, color_sensor)              
+                  turn_right_on_self(left_motor, right_motor)
+                  undo_turn_right_on_self(left_motor, right_motor)
+              elif pattern == ST_ROOM:
+                  print("straight on")
+              elif pattern == NEW_EDGE:
+                  smooth_turn(left_motor, right_motor, color_sensor)
+              counter += 1
+         
+          correction_factor: float = (curr_val - target) * kp
+          print("correction factor is: " + str(correction_factor))
+
+          left_motor.set_dps(base_speed - correction_factor)
+          right_motor.set_dps(base_speed + correction_factor)
+          busy_sleep(0.05) #TODO: maybe change this 
+          
+          # update curr_dist
+          left_deg = left_motor.get_encoder()
+          right_deg = right_motor.get_encoder()
+          curr_dist = -(((left_deg + right_deg) / 2) * CM_PER_DEG)
+          print("curr_dist is:" + str(curr_dist))
+          
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
    
 
 
