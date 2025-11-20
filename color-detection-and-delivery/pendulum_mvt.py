@@ -2,156 +2,183 @@ from utils.brick import Motor, TouchSensor, BP, wait_ready_sensors, EV3ColorSens
 from brickpi3 import SensorError
 from color_detection_algorithm import ColorDetectionAlgorithm
 import time
+import threading
+from utils import sound
+
 
 #----------- CONSTANTS -----------#
 INITIAL_POSITION = 0
 LEFT_POSITION = -45
 RIGHT_POSITION = 45
-MOTOR_DPS = 50
+MOTOR_DPS = 100
 TIME_SLEEP = 1.5
+
+SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
 
 #----- Color detection object -----#
 csa = ColorDetectionAlgorithm()
-COLOR_SENSOR = EV3ColorSensor(1)
+COLOR_SENSOR = EV3ColorSensor(3)
 color_found = False
 
 #------------- SETUP -------------#
 #ULTRASOUND_SENSOR = EV3UltrasonicSensor(2)
 #TOUCH_SENSOR = TouchSensor(1)
 motor_pendulum = Motor("D") 
-motor_block1 = Motor(3)  
-motor_block2 = Motor(4)  
+motor_block = Motor("A")  
+#TEST = Motor("D")
 wait_ready_sensors()
 motor_pendulum.reset_encoder()
-motor_block1.reset_encoder()
-motor_block2.reset_encoder()
+motor_block.reset_encoder()
 
 
 #---------- COLOR CLASSIFICATION ----------#
 def color_sample():
-    counter_green = 0
-    counter_red = 0
+    count_green = 0
+    count_red = 0
 
-    for _ in range(int(TIME_SLEEP / 0.05)):
+    global detected_color, stop
+
+    while not stop and not motor_block_done and not motor_pendulum_done:
         try:
             values = COLOR_SENSOR.get_value()
             if values:
                 R, G, B, L = values
                 color = csa.classify_the_color(R, G, B)
-                #print(color)
-                if color == "green" or color == "red":
-                    return color
+                print(color)
+                if color == "green":
+                    count_green+=1
+                    print(count_green)
+                    count_red = 0
+                elif color == "red":
+                    count_red+=1 
+                    count_green = 0
+                else:
+                    count_green = 0
+                    count_red = 0
+  
+                if (count_green >=5):
+                    color = "green"
+                    detected_color = color
+                    stop = True
+                    motor_pendulum.set_dps(0)
+                    motor_block.set_dps(0)
+                    SOUND_GREEN.play()
+                    
+                else:
+                    color = None
+  
+                if (count_red >=5):
+                    color = "red"
+                    detected_color = color
+                    stop = True
+                    motor_pendulum.set_dps(0)
+                    motor_block.set_dps(0)
                 
-
-#                 if color == "green":
-#                     count_green+=1
-#                     count_red = 0
-#                 elif color == "red":
-#                     count_red+=1 
-#                     count_green = 0
-#                 else:
-#                     count_green = 0
-#                     count_red = 0
-# 
-#                 if (count_green >=5):
-#                     return "green"
-# 
-#                 if (count_red >=5):
-#                     return "red"
+                else:
+                    color = None
+               
+                     
+                
         except SensorError:
             print("Color sensor read error")
 
-        time.sleep(0.05)
+        
     return None
 
-def set_position_arms(position):
-    print("setting position arms")
-    motor_pendulum.set_position(position)
-    print("setting position arms 1")
-    motor_block1.set_position(position)
-    print("setting position arms 2")
-    motor_block2.set_position(position)
-    print("setting position arms 3")
-
-def set_dps_arms(dps):
-    print("setting dps arms")
-    motor_pendulum.set_dps(dps)
-    print("setting dps arms 1")
-    motor_block1.set_dps(dps)
-    print("setting dps arms 2")
-    motor_block2.set_dps(dps)
-    print("setting dps arms 3")
-
-def set_power_arms(power):
-    print("setting power arms")
-    motor_pendulum.set_dps(power)
-    print("setting power arms 1")
-    motor_block1.set_dps(power)
-    print("setting power arms 2")
-    motor_block2.set_dps(power)
-    print("setting power arms 3")
-
-def detected_color_algorithm(position, dps, power) :
-    print("setting detected color algo")
-    set_position_arms(position)
-    time.sleep(1)
-    set_dps_arms(dps)
-    set_power_arms(power)
 
 
-#---------- MAIN FUNCTION ----------#
-def find_color(): #find_color()
-    detected_color = None
+def move_motor_pendulum(): 
+
+    global stop, motor_pendulum_done
+
 
     print('System is Ready!')
 
-    try: 
-        #if TOUCH_SENSOR.is_pressed(): 
-        set_dps_arms(MOTOR_DPS)
-        set_position_arms(LEFT_POSITION)
+    #if TOUCH_SENSOR.is_pressed(): 
+        
+    motor_pendulum.set_dps(MOTOR_DPS)
 
-        print ("setted to left")
-        detected_color = color_sample()
-        if detected_color:
-            detected_color_algorithm(INITIAL_POSITION, 0, 0)
-            return detected_color
+    for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
+        
+        if stop:
+            motor_pendulum.set_dps(0)
+            break
 
-
-        set_position_arms(INITIAL_POSITION)
-  
-        detected_color = color_sample()
-        if detected_color:
-            detected_color_algorithm(INITIAL_POSITION, 0, 0)
-            return detected_color
-
-
-        set_position_arms(RIGHT_POSITION)
-    
-        detected_color = color_sample()
-        if detected_color:
-            detected_color_algorithm(INITIAL_POSITION, 0, 0)
-            return detected_color
-
-
-        set_position_arms(INITIAL_POSITION)
-
-
-        detected_color = color_sample()
-        if detected_color:
-            detected_color_algorithm(INITIAL_POSITION, 0, 0)
-            return detected_color
-            
-            
-    except SensorError as error:
-        print("Sensor error:", error)
-            
-    except KeyboardInterrupt:
-        set_dps_arms(MOTOR_DPS)
-        set_position_arms(INITIAL_POSITION)
+        motor_pendulum.set_position(pos)
         time.sleep(1)
+
+    motor_pendulum.set_dps(0)
+    motor_pendulum_done = True
+        
+def move_motor_block(): 
+
+    global stop, motor_block_done
+
+
+    print('System is Ready!')
+
+     
+    #if TOUCH_SENSOR.is_pressed(): 
+        
+    motor_block.set_dps(MOTOR_DPS)
+
+    for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
+        
+        if stop:
+            motor_block.set_dps(0)
+            break
+
+        motor_block.set_position(pos)
+        time.sleep(1)
+
+    motor_block.set_dps(0)
+    motor_block_done = True
+        
+        
+
+
+
+def main_pendulum():
+    global detected_color, stop, motor_pendulum_done, motor_block_done
+    detected_color = None
+    stop = False
+    motor_pendulum_done = False
+    motor_block_done = False
+
+    try:
+
+        color_thread = threading.Thread(target=color_sample)
+        move_pendulum_thread = threading.Thread(target=move_motor_pendulum)
+        move_block_thread = threading.Thread(target=move_motor_block)
+
+        color_thread.start()
+        move_pendulum_thread.start()
+        move_block_thread.start()
+        
+        color_thread.join()
+        
+        move_pendulum_thread.join()
+        move_block_thread.join()
+        
+    
+        print("done")
+
+        return detected_color
+
+    except KeyboardInterrupt:
+       
+        motor_pendulum.set_dps(0)
+        motor_block.set_dps(0)
+        stop = True
         BP.reset_all()
+        
+    except SensorError as error:
+       
+        print("error")
+
 
 
 #------------- RUNNING MAIN -------------#
 if __name__ == "__main__":
-    find_color()
+ 
+    main_pendulum()

@@ -27,52 +27,46 @@ LEFT_WHEEL = Motor("B")
 wait_ready_sensors()
 print("System is ready!")
 
-first_block_dropped = False
-second_block_dropped = False
-
 
 def deliver_package():
     try:
         degree_rotation = 0
-        if(pendulum_mvt.motor_pendulum.get_position < 0):
-            degree_rotation = 45
+        if(pendulum_mvt.motor_pendulum().get_position < 0):
+            degree_rotation = 15
         else :
-            degree_rotation = -45
+            degree_rotation = -15
 
 
-        if (not first_block_dropped):
+        pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
+        pendulum_mvt.motor_pendulum.set_position(degree_rotation)
+        time.sleep(0.5)
 
-            pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
-            pendulum_mvt.motor_pendulum.set_position(degree_rotation)
-            time.sleep(0.5)
+        pendulum_mvt.motor_pendulum.set_dps(0)
 
-            first_block_dropped = True
-    
 
-        else :
-            pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
-            pendulum_mvt.motor_pendulum.set_position(degree_rotation)
-            pendulum_mvt.motor_block1.set_dps(pendulum_mvt.MOTOR_DPS)
-            pendulum_mvt.motor_block1.set_position(degree_rotation)
-
-            time.sleep(0.5)
-
-            second_block_dropped = True
-
+        robot_moving_in_the_room.move_robot(DISTANCE_PER_SCANNING/2, 100)
+        time.sleep(0.3)
+        pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
+        pendulum_mvt.motor_block.set_dps(pendulum_mvt.MOTOR_DPS)
+        pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
         time.sleep(1)
+        pendulum_mvt.motor_pendulum.set_dps(0)
+        pendulum_mvt.motor_block.set_position(pendulum_mvt.INITIAL_POSITION)
 
-        pendulum_mvt.set_dps_arms(pendulum_mvt.MOTOR_DPS)
+        time.sleep(1)  
+        pendulum_mvt.motor_block.set_dps(0)
 
-        pendulum_mvt.detected_color_algorithm(pendulum_mvt.INITIAL_POSITION, 0, 0)
-
-        robot_moving_in_the_room.move_robot(robot_moving_in_the_room.total_distance)
+   
+        robot_moving_in_the_room.move_robot(robot_moving_in_the_room.total_distance - DISTANCE_PER_SCANNING/2)
         robot_moving_in_the_room.total_distance = 0
 
 
     except KeyboardInterrupt:
         LEFT_WHEEL.set_dps(0)
         RIGHT_WHEEL.set_dps(0) 
-        pendulum_mvt.detected_color_algorithm(pendulum_mvt.INITIAL_POSITION, 0, 0)
+        pendulum_mvt.motor_pendulum.set_dps(0)
+        pendulum_mvt.motor_block.set_dps(0)
+        
         BP.reset_all()
 
     except BaseException as error:
@@ -80,7 +74,10 @@ def deliver_package():
         BP.reset_all()  
             
 
-
+#------------- RUNNING MAIN -------------#
+if __name__ == "__main__":
+ 
+    deliver_package()
 
 
 
