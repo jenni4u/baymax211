@@ -135,29 +135,53 @@ def move_straight_distance(distance: float,
         distance: Distance to move in cm (positive for forward, negative for backward).
         speed: Speed of the motors.
     """
+    forward = False
+    if distance > 0:
+        forward = True
+
     curr_degrees = (left_motor.get_encoder() + right_motor.get_encoder())/2
     print("curr_degrees: " + str(curr_degrees))
-    degrees_to_achieve = curr_degrees - distance/CM_PER_DEG
+    if forward:
+        degrees_to_achieve = curr_degrees - distance/CM_PER_DEG
+    else:
+        degrees_to_achieve = curr_degrees + distance/CM_PER_DEG
     print("degrees_to_achieve: " + str(degrees_to_achieve))
 
     #Need to give it a little boost to get out of only black
-    left_motor.set_dps(speed)
-    right_motor.set_dps(speed)
+    if forward:
+        left_motor.set_dps(speed)
+        right_motor.set_dps(speed)
+    else:
+        left_motor.set_dps(-speed)
+        right_motor.set_dps(-speed)
     busy_sleep(0.5)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 
-    while (left_motor.get_encoder() + right_motor.get_encoder())/2 > degrees_to_achieve: #signs are flipped due to degrees being negative
-         print("moving straight")
-         print("Degrees left to achieve: " + str(((left_motor.get_encoder() + right_motor.get_encoder())/2 - degrees_to_achieve)))
-         curr_val: float = get_reflected_light_reading(color_sensor, 3) 
-         correction_factor: float = (curr_val - target) * KP
-         left_motor.set_dps(speed - correction_factor)
-         right_motor.set_dps(speed + correction_factor)
-         busy_sleep(0.03)               
-    left_motor.set_dps(0)
-    right_motor.set_dps(0)
-    busy_sleep(2)
+    if forward:
+        while (left_motor.get_encoder() + right_motor.get_encoder())/2 > degrees_to_achieve: #signs are flipped due to degrees being negative
+            print("moving straight")
+            print("Degrees left to achieve: " + str(((left_motor.get_encoder() + right_motor.get_encoder())/2 - degrees_to_achieve)))
+            curr_val: float = get_reflected_light_reading(color_sensor, 3) 
+            correction_factor: float = (curr_val - target) * KP
+            left_motor.set_dps(speed - correction_factor)
+            right_motor.set_dps(speed + correction_factor)
+            busy_sleep(0.03)               
+        left_motor.set_dps(0)
+        right_motor.set_dps(0)
+        busy_sleep(2)
+    else:
+        while (left_motor.get_encoder() + right_motor.get_encoder())/2 < degrees_to_achieve: 
+            print("moving straight backwards")
+            print("Degrees left to achieve: " + str((degrees_to_achieve - (left_motor.get_encoder() + right_motor.get_encoder())/2)))
+            curr_val: float = get_reflected_light_reading(color_sensor, 3) 
+            correction_factor: float = (curr_val - target) * KP
+            left_motor.set_dps(-speed - correction_factor)
+            right_motor.set_dps(-speed + correction_factor)
+            busy_sleep(0.03)               
+        left_motor.set_dps(0)
+        right_motor.set_dps(0)
+        busy_sleep(2)
 
 
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
