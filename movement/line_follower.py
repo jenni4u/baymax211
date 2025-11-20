@@ -1,4 +1,4 @@
-from ..utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
+from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
 import math
 import time
 # We follow the left edge of the line 
@@ -202,7 +202,7 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     inner_turn = 0.25 * (2 * math.pi * INNER_RADIUS)
     outer_turn = 0.25 * (2 * math.pi * OUTER_RADIUS)
     
-    # assumes robot only needs to turn left
+    # for turning LEFT
     # initialize inner and outer wheels
     inner_wheel = left_motor
     outer_wheel = right_motor
@@ -222,7 +222,7 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     # set wheel dps limits for turn
     inner_wheel.set_dps(dps=inner_dps)
     outer_wheel.set_dps(dps=outer_dps)
-    time.sleep(2) # wait for robot to move off the line
+    busy_sleep(2) # wait for robot to move off the line
     turning = True
     while turning:
         curr_val = get_reflected_light_reading(color_sensor, 3)
@@ -237,7 +237,8 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
 
             turning = False
             print("stopped")
-            move_straight_distance(5) #move a bit forward to stabilize on line
+            # move_straight_distance(5) #move a bit forward to stabilize on line
+
 
 def line_follower(left_motor: Motor = LEFT_WHEEL, 
                   right_motor: Motor = RIGHT_WHEEL, 
