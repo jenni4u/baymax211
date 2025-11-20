@@ -108,8 +108,19 @@ def undo_turn_right_on_self(left_motor: Motor = LEFT_WHEEL,
     right_motor.set_dps(0)
     busy_sleep(1)
 
+def move_forward(distance,
+                 left_wheel: Motor = LEFT_WHEEL,
+                 right_wheel: Motor= RIGHT_WHEEL) -> None:
+    """Move the robot forward by a certain distance."""
+    distance = -distance
+    right_wheel.set_limits(100, dps=BASE_SPEED)
+    left_wheel.set_limits(100, dps=BASE_SPEED)   
+    # rotate wheels
+    left_wheel.set_position_relative(distance * DISTTODEG)
+    right_wheel.set_position_relative(distance * DISTTODEG)
 
-def simple_move_straight(distance: float,
+
+def move_straight_distance(distance: float,
                          left_motor: Motor = LEFT_WHEEL, 
                          right_motor: Motor = RIGHT_WHEEL,
                          color_sensor: EV3ColorSensor = COLOR_SENSOR,
@@ -169,8 +180,8 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     
     # assumes robot only needs to turn left
     # initialize inner and outer wheels
-    inner_wheel = LEFT_WHEEL
-    outer_wheel = RIGHT_WHEEL
+    inner_wheel = left_motor
+    outer_wheel = right_motor
 
     # adjustment factors
     inner_turn = 1*inner_turn
@@ -201,10 +212,9 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
                 continue          
             turning = False
             print("stopped")
-            move_straight(5) #move a bit forward to stabilize on line
+            move_straight_distance(5) #move a bit forward to stabilize on line
 
-def move_straight(distance: float, 
-                  left_motor: Motor = LEFT_WHEEL, 
+def line_follower(left_motor: Motor = LEFT_WHEEL, 
                   right_motor: Motor = RIGHT_WHEEL, 
                   color_sensor: EV3ColorSensor = COLOR_SENSOR,
                   kp: float = KP, 
@@ -220,7 +230,6 @@ def move_straight(distance: float,
         left_motor: Motor instance for the left wheel.
         right_motor: Motor instance for the right wheel.
         color_sensor: EV3ColorSensor instance.
-        distance: Distance to move in cm (positive for forward, negative for backward).
         kp: Proportional gain for correction.
         target: Target reflected light value.
         base_speed: Base speed of the motors.
@@ -228,24 +237,23 @@ def move_straight(distance: float,
     
     left_motor.reset_encoder()
     right_motor.reset_encoder()
-    curr_dist: float = 0.0
+
+    curr_val: float = get_reflected_light_reading(color_sensor, 3)
+    print("curr_val" + str(curr_val))
     
-    while curr_dist < distance:
+    while curr_val > BLACK_THRESHOLD:
+          # Get current reflected light value
           curr_val: float = get_reflected_light_reading(color_sensor, 3)
           print("curr_val" + str(curr_val))
-            
+        
+          # Calculate correction factor
           correction_factor: float = (curr_val - target) * kp
           print("correction factor is: " + str(correction_factor))
 
+          # Apply correction to motor speeds
           left_motor.set_dps(base_speed - correction_factor)
           right_motor.set_dps(base_speed + correction_factor)
-          busy_sleep(0.05) #TODO: maybe change this 
-          
-          # update curr_dist
-          left_deg = left_motor.get_encoder()
-          right_deg = right_motor.get_encoder()
-          curr_dist = -(((left_deg + right_deg) / 2) * CM_PER_DEG)
-          print("curr_dist is:" + str(curr_dist))
-          
+          busy_sleep(0.05)
+
     left_motor.set_dps(0)
     right_motor.set_dps(0)
