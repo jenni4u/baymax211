@@ -45,7 +45,7 @@ def scan_room():
     LEFT_WHEEL.set_dps(0)
     LEFT_WHEEL.set_position_relative(0)
     RIGHT_WHEEL.set_position_relative(0)
-    time.sleep(0.1)
+    time.sleep(0.05)
     try:
         while True:
 
@@ -68,19 +68,57 @@ def scan_room():
             if color == "red":
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
-                pendulum_mvt.motor_pendulum.set_dps(0)           
+                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_block.set_dps(0) 
 #                 pendulum_mvt.motor_pendulum.set_power(0)
                 time.sleep(1.5)
                 move_robot(-DISTANCE_PER_SCANNING, 150)
                 break
             elif color == "green":
                 
+                print("ENTER DELIVERY LOGIC")
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pendulum_mvt.motor_pendulum.set_dps(0)           
-                #pendulum_mvt.motor_pendulum.set_power(0)
+                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_block.set_dps(0) 
+
+                print("SUCCESSFULYY STOPPED THE MOVEMENT")
+                
+                
+                degree_rotation = 0
+                if(pendulum_mvt.motor_pendulum().get_position < 0):
+                    degree_rotation = 5
+                else :
+                    degree_rotation = -5
+
+                print("degree rotation", degree_rotation)
+
+
+                pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
+                pendulum_mvt.motor_pendulum.set_position(degree_rotation)
+                time.sleep(0.5)
+
+                pendulum_mvt.motor_pendulum.set_dps(0)
+
+                print("SUCCESSFULLY MOVED THE COLOR ARM")
+
+
+                move_robot(DISTANCE_PER_SCANNING/2, 100)
+                time.sleep(0.3)
+                pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
+                pendulum_mvt.motor_block.set_dps(pendulum_mvt.MOTOR_DPS)
+                pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
                 time.sleep(1)
+                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_block.set_position(pendulum_mvt.INITIAL_POSITION)
+
+                time.sleep(1)  
+                pendulum_mvt.motor_block.set_dps(0)
+
+           
+                move_robot(total_distance - DISTANCE_PER_SCANNING/2)
+                time.sleep(4)
+                total_distance = 0
                 break
 
 

@@ -1,7 +1,8 @@
 from utils.brick import Motor, BP, wait_ready_sensors
 import math
 import time
-import pendulum_mvt, robot_moving_in_the_room
+import pendulum_mvt
+import robot_moving_in_the_room
 
 
 # MOVEMENT PARAMETERS

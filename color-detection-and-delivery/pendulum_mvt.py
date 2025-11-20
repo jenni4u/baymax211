@@ -10,7 +10,7 @@ from utils.sound import play_success
 INITIAL_POSITION = 0
 LEFT_POSITION = -45
 RIGHT_POSITION = 45
-MOTOR_DPS = 100
+MOTOR_DPS = 150
 TIME_SLEEP = 1.5
 
 #SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
@@ -97,15 +97,17 @@ def move_motor_pendulum():
     #if TOUCH_SENSOR.is_pressed(): 
         
     motor_pendulum.set_dps(MOTOR_DPS)
-
-    for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
+    
+    if stop:
+        motor_pendulum.set_dps(0)
         
-        if stop:
-            motor_pendulum.set_dps(0)
-            break
-
-        motor_pendulum.set_position(pos)
+    elif(motor_pendulum.get_position() >= 0) :
+        motor_pendulum.set_position(LEFT_POSITION)
         time.sleep(1)
+    else :
+        motor_pendulum.set_position(RIGHT_POSITION)
+        time.sleep(1)
+
 
     motor_pendulum.set_dps(0)
     motor_pendulum_done = True
@@ -122,18 +124,19 @@ def move_motor_block():
         
     motor_block.set_dps(MOTOR_DPS)
 
-    for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
+    if stop:
+        motor_block.set_dps(0)
         
-        if stop:
-            motor_block.set_dps(0)
-            break
-
-        motor_block.set_position(pos)
+    elif(motor_block.get_position() >= 0) :
+        motor_block.set_position(LEFT_POSITION)
+        time.sleep(1)
+    else :
+        motor_block.set_position(RIGHT_POSITION)
         time.sleep(1)
 
+
     motor_block.set_dps(0)
-    motor_block_done = True
-        
+    motor_block_done = True   
         
 
 
@@ -165,12 +168,6 @@ def main_pendulum():
 
         return detected_color
 
-    except KeyboardInterrupt:
-       
-        motor_pendulum.set_dps(0)
-        motor_block.set_dps(0)
-        stop = True
-        BP.reset_all()
         
     except SensorError as error:
        
