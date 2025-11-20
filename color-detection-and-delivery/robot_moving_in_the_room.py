@@ -18,7 +18,7 @@ DPS =50 # speed of the robot
 CHECK_TURN = -10 # distance outer wheel travels in entrance check turn
 
 MAX_ROOM_DISTANCE = 19 #cm
-DISTANCE_PER_SCANNING = 2.8
+DISTANCE_PER_SCANNING = 2.82
 
 # Initialize motors
 RIGHT_WHEEL = Motor("C")

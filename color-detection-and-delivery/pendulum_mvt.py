@@ -3,13 +3,17 @@ from brickpi3 import SensorError
 from color_detection_algorithm import ColorDetectionAlgorithm
 import time
 import threading
+from utils import sound
+
 
 #----------- CONSTANTS -----------#
 INITIAL_POSITION = 0
 LEFT_POSITION = -45
 RIGHT_POSITION = 45
-MOTOR_DPS = 50
+MOTOR_DPS = 100
 TIME_SLEEP = 1.5
+
+SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
 
 #----- Color detection object -----#
 csa = ColorDetectionAlgorithm()
@@ -29,41 +33,52 @@ motor_block.reset_encoder()
 
 #---------- COLOR CLASSIFICATION ----------#
 def color_sample():
-    counter_green = 0
-    counter_red = 0
+    count_green = 0
+    count_red = 0
 
     global detected_color, stop
 
-    while not stop:
+    while not stop and not motor_block_done and not motor_pendulum_done:
         try:
             values = COLOR_SENSOR.get_value()
             if values:
                 R, G, B, L = values
                 color = csa.classify_the_color(R, G, B)
                 print(color)
-                if color == "green" or color == "red":
+                if color == "green":
+                    count_green+=1
+                    print(count_green)
+                    count_red = 0
+                elif color == "red":
+                    count_red+=1 
+                    count_green = 0
+                else:
+                    count_green = 0
+                    count_red = 0
+  
+                if (count_green >=5):
+                    color = "green"
                     detected_color = color
                     stop = True
                     motor_pendulum.set_dps(0)
                     motor_block.set_dps(0)
+                    SOUND_GREEN.play()
+                    
+                else:
+                    color = None
+  
+                if (count_red >=5):
+                    color = "red"
+                    detected_color = color
+                    stop = True
+                    motor_pendulum.set_dps(0)
+                    motor_block.set_dps(0)
+                
+                else:
+                    color = None
+               
                      
                 
-
-#                 if color == "green":
-#                     count_green+=1
-#                     count_red = 0
-#                 elif color == "red":
-#                     count_red+=1 
-#                     count_green = 0
-#                 else:
-#                     count_green = 0
-#                     count_red = 0
-# 
-#                 if (count_green >=5):
-#                     return "green"
-# 
-#                 if (count_red >=5):
-#                     return "red"
         except SensorError:
             print("Color sensor read error")
 
@@ -74,7 +89,7 @@ def color_sample():
 
 def move_motor_pendulum(): 
 
-    global stop
+    global stop, motor_pendulum_done
 
 
     print('System is Ready!')
@@ -93,10 +108,11 @@ def move_motor_pendulum():
         time.sleep(1)
 
     motor_pendulum.set_dps(0)
+    motor_pendulum_done = True
         
 def move_motor_block(): 
 
-    global stop
+    global stop, motor_block_done
 
 
     print('System is Ready!')
@@ -116,15 +132,18 @@ def move_motor_block():
         time.sleep(1)
 
     motor_block.set_dps(0)
+    motor_block_done = True
         
         
 
 
 
 def main_pendulum():
-    global detected_color, stop
+    global detected_color, stop, motor_pendulum_done, motor_block_done
     detected_color = None
     stop = False
+    motor_pendulum_done = False
+    motor_block_done = False
 
     try:
 
@@ -135,6 +154,14 @@ def main_pendulum():
         color_thread.start()
         move_pendulum_thread.start()
         move_block_thread.start()
+        
+        color_thread.join()
+        
+        move_pendulum_thread.join()
+        move_block_thread.join()
+        
+    
+        print("done")
 
         return detected_color
 
@@ -142,6 +169,7 @@ def main_pendulum():
        
         motor_pendulum.set_dps(0)
         motor_block.set_dps(0)
+        stop = True
         BP.reset_all()
         
     except SensorError as error:

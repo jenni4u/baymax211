@@ -100,13 +100,13 @@ class ColorDetectionAlgorithm:
     def create_dictionary_of_clusters(self) :
         clusters = {}
         for color in ["blue", "green", "purple", "red", "orange", "yellow"]:
-            clusters[color] = self.find_cluster_of_colored_block(f"/home/pi/ecse211/baymax211/Color_files/{color}.csv")
+            clusters[color] = self.find_cluster_of_colored_block(f"/home/pi/ecse211/baymax211/Color files/{color}.csv")
         return clusters
     
     def create_dictionary_of_thresholds(self) :
         thresholds = {}
         for color in ["blue", "green", "purple", "red","orange", "yellow"]:
-            thresholds[color] = self.compute_threshold_of_colored_block(f"/home/pi/ecse211/baymax211/Color_files/{color}.csv")
+            thresholds[color] = self.compute_threshold_of_colored_block(f"/home/pi/ecse211/baymax211/Color files/{color}.csv")
         return thresholds
 
     
@@ -136,8 +136,8 @@ class ColorDetectionAlgorithm:
                     
         lower_threshold, upper_threshold = thresholds[closest_color]
 
-        if distances[closest_color] < lower_threshold or distances[closest_color] > upper_threshold:
-            return "The threshold is not respected"
+#         if distances[closest_color] < lower_threshold or distances[closest_color] > upper_threshold:
+#             return "The threshold is not respected"
         
         return closest_color
     
