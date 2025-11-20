@@ -1,4 +1,4 @@
-from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
+from ..utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
 import math
 import time
 # We follow the left edge of the line 
@@ -207,9 +207,10 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
         # kept flexible
         if curr_val < BLACK_THRESHOLD: 
             # continue turning until we find target spot again
-            while curr_val < TARGET - :
+            while curr_val < TARGET - TARGET_THRESHOLD:
                 curr_val = get_reflected_light_reading(color_sensor, 3)
-                continue          
+                continue     
+
             turning = False
             print("stopped")
             move_straight_distance(5) #move a bit forward to stabilize on line
