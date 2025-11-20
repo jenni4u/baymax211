@@ -205,4 +205,49 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
             print("stopped")
             move_straight(5) #move a bit forward to stabilize on line
 
-        
+def move_straight(distance: float, 
+                  left_motor: Motor = LEFT_WHEEL, 
+                  right_motor: Motor = RIGHT_WHEEL, 
+                  color_sensor: EV3ColorSensor = COLOR_SENSOR,
+                  kp: float = KP, 
+                  target: float = TARGET, 
+                  base_speed: float = BASE_SPEED
+                  ) -> None:
+    """ 
+    Follows left edge of the line, half on line half on white is ideal position
+    If sees too much black, will turn left 
+    If sees too much white, will turn right 
+
+    Args:
+        left_motor: Motor instance for the left wheel.
+        right_motor: Motor instance for the right wheel.
+        color_sensor: EV3ColorSensor instance.
+        distance: Distance to move in cm (positive for forward, negative for backward).
+        kp: Proportional gain for correction.
+        target: Target reflected light value.
+        base_speed: Base speed of the motors.
+    """
+    
+    left_motor.reset_encoder()
+    right_motor.reset_encoder()
+    curr_dist: float = 0.0
+    
+    while curr_dist < distance:
+          curr_val: float = get_reflected_light_reading(color_sensor, 3)
+          print("curr_val" + str(curr_val))
+            
+          correction_factor: float = (curr_val - target) * kp
+          print("correction factor is: " + str(correction_factor))
+
+          left_motor.set_dps(base_speed - correction_factor)
+          right_motor.set_dps(base_speed + correction_factor)
+          busy_sleep(0.05) #TODO: maybe change this 
+          
+          # update curr_dist
+          left_deg = left_motor.get_encoder()
+          right_deg = right_motor.get_encoder()
+          curr_dist = -(((left_deg + right_deg) / 2) * CM_PER_DEG)
+          print("curr_dist is:" + str(curr_dist))
+          
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
