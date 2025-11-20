@@ -62,7 +62,7 @@ def stop(left_motor: Motor = LEFT_WHEEL,
     right_motor.set_dps(0)
 
 
-def turn_left_on_self(left_motor: Motor = LEFT_WHEEL, 
+def turn_room(left_motor: Motor = LEFT_WHEEL, 
                        right_motor: Motor = RIGHT_WHEEL, 
                        diameter_axis: int = 12.00, 
                        radius: float = DIAMETER/2, 
@@ -84,8 +84,28 @@ def turn_left_on_self(left_motor: Motor = LEFT_WHEEL,
     left_motor.set_dps(0)
     right_motor.set_dps(0)
     busy_sleep(1)
+
+def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
+                            right_motor: Motor = RIGHT_WHEEL,
+                            color_sensor: EV3ColorSensor = COLOR_SENSOR,
+                            dps: int = BASE_SPEED,
+                            ) -> float:
+    time_start = time.time()
+    while color_sensor.get_red() > BLACK_THRESHOLD:
+        left_motor.set_dps(-dps)
+        right_motor.set_dps(dps)
+        busy_sleep(0.02)
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
+    while color_sensor.get_red() < TARGET:
+        left_motor.set_dps(-dps)
+        right_motor.set_dps(dps)
+        busy_sleep(0.02)
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
     
-def undo_turn_left_on_self(left_motor: Motor = LEFT_WHEEL,
+
+def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
                             right_motor: Motor = RIGHT_WHEEL, 
                             diameter_axis: int = 12.00, 
                             radius: int = DIAMETER/2, 
@@ -108,6 +128,7 @@ def undo_turn_left_on_self(left_motor: Motor = LEFT_WHEEL,
     right_motor.set_dps(0)
     busy_sleep(1)
 
+
 def move_forward(distance,
                  left_wheel: Motor = LEFT_WHEEL,
                  right_wheel: Motor= RIGHT_WHEEL) -> None:
@@ -128,6 +149,7 @@ def move_forward(distance,
         left_wheel.set_position_relative(degrees)
         right_wheel.set_position_relative(degrees)
     busy_sleep(2)
+
 
 def move_straight_distance(distance: float,
                          left_motor: Motor = LEFT_WHEEL, 
