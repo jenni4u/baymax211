@@ -40,11 +40,13 @@ def color_sample():
             if values:
                 R, G, B, L = values
                 color = csa.classify_the_color(R, G, B)
-                #print(color)
+                print(color)
                 if color == "green" or color == "red":
                     detected_color = color
                     stop = True
-                    return 
+                    motor_pendulum.set_dps(0)
+                    motor_block.set_dps(0)
+                     
                 
 
 #                 if color == "green":
@@ -65,60 +67,58 @@ def color_sample():
         except SensorError:
             print("Color sensor read error")
 
-        time.sleep(0.05)
+        
     return None
 
 
 
-#---------- MAIN FUNCTION ----------#
-def move_motor_pendulum(): #find_color()
+def move_motor_pendulum(): 
 
     global stop
 
 
     print('System is Ready!')
 
-    try: 
-        #if TOUCH_SENSOR.is_pressed(): 
+    #if TOUCH_SENSOR.is_pressed(): 
         
-        motor_pendulum.set_dps(MOTOR_DPS)
+    motor_pendulum.set_dps(MOTOR_DPS)
 
-        for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
+    for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
         
-            if stop:
-                break
+        if stop:
+            motor_pendulum.set_dps(0)
+            break
 
-            motor_pendulum.set_position(pos)
-            time.sleep(1)
-
-        motor_pendulum.set_dps(0)
-
-
-            
-            
-    except SensorError as error:
-        print("Sensor error:", error)
-            
-    except KeyboardInterrupt:
-        motor_pendulum.set_dps(MOTOR_DPS)
-        motor_pendulum.set_position(INITIAL_POSITION)
+        motor_pendulum.set_position(pos)
         time.sleep(1)
-        BP.reset_all()
+
+    motor_pendulum.set_dps(0)
+        
+def move_motor_block(): 
+
+    global stop
 
 
-def move_motor_block(): #find_color()
-    global stop_signal
+    print('System is Ready!')
+
+     
+    #if TOUCH_SENSOR.is_pressed(): 
+        
     motor_block.set_dps(MOTOR_DPS)
 
     for pos in [LEFT_POSITION, INITIAL_POSITION, RIGHT_POSITION, INITIAL_POSITION]:
         
         if stop:
+            motor_block.set_dps(0)
             break
 
         motor_block.set_position(pos)
         time.sleep(1)
 
     motor_block.set_dps(0)
+        
+        
+
 
 
 def main_pendulum():
@@ -142,8 +142,12 @@ def main_pendulum():
        
         motor_pendulum.set_dps(0)
         motor_block.set_dps(0)
-        stop = True
-        return None
+        BP.reset_all()
+        
+    except SensorError as error:
+       
+        print("error")
+
 
 
 #------------- RUNNING MAIN -------------#
