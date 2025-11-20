@@ -44,22 +44,29 @@ def deliver_package():
         pendulum_mvt.motor_pendulum.set_dps(0)
 
 
-        robot_moving_in_the_room.move_robot(3, 100)
+        robot_moving_in_the_room.move_robot(DISTANCE_PER_SCANNING/2, 100)
+        time.sleep(0.3)
         pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
+        pendulum_mvt.motor_block.set_dps(pendulum_mvt.MOTOR_DPS)
         pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
         time.sleep(1)
         pendulum_mvt.motor_pendulum.set_dps(0)
+        pendulum_mvt.motor_block.set_position(pendulum_mvt.INITIAL_POSITION)
+
+        time.sleep(1)  
+        pendulum_mvt.motor_block.set_dps(0)
 
    
-
-        robot_moving_in_the_room.move_robot(robot_moving_in_the_room.total_distance - 3)
+        robot_moving_in_the_room.move_robot(robot_moving_in_the_room.total_distance - DISTANCE_PER_SCANNING/2)
         robot_moving_in_the_room.total_distance = 0
 
 
     except KeyboardInterrupt:
         LEFT_WHEEL.set_dps(0)
         RIGHT_WHEEL.set_dps(0) 
-        pendulum_mvt.detected_color_algorithm(pendulum_mvt.INITIAL_POSITION, 0, 0)
+        pendulum_mvt.motor_pendulum.set_dps(0)
+        pendulum_mvt.motor_block.set_dps(0)
+        
         BP.reset_all()
 
     except BaseException as error:
@@ -67,7 +74,10 @@ def deliver_package():
         BP.reset_all()  
             
 
-
+#------------- RUNNING MAIN -------------#
+if __name__ == "__main__":
+ 
+    deliver_package()
 
 
 
