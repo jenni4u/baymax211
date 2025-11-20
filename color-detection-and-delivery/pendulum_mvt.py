@@ -97,15 +97,17 @@ def move_motor_pendulum():
     #if TOUCH_SENSOR.is_pressed(): 
         
     motor_pendulum.set_dps(MOTOR_DPS)
-
-    for pos in [LEFT_POSITION, RIGHT_POSITION]:
+    
+    if stop:
+        motor_pendulum.set_dps(0)
         
-        if stop:
-            motor_pendulum.set_dps(0)
-            break
-
-        motor_pendulum.set_position(pos)
+    elif(motor_pendulum.get_position() >= 0) :
+        motor_pendulum.set_position(LEFT_POSITION)
         time.sleep(1)
+    else :
+        motor_pendulum.set_position(RIGHT_POSITION)
+        time.sleep(1)
+
 
     motor_pendulum.set_dps(0)
     motor_pendulum_done = True
@@ -122,18 +124,19 @@ def move_motor_block():
         
     motor_block.set_dps(MOTOR_DPS)
 
-    for pos in [LEFT_POSITION, RIGHT_POSITION]:
+    if stop:
+        motor_block.set_dps(0)
         
-        if stop:
-            motor_block.set_dps(0)
-            break
-
-        motor_block.set_position(pos)
+    elif(motor_block.get_position() >= 0) :
+        motor_block.set_position(LEFT_POSITION)
+        time.sleep(1)
+    else :
+        motor_block.set_position(RIGHT_POSITION)
         time.sleep(1)
 
+
     motor_block.set_dps(0)
-    motor_block_done = True
-        
+    motor_block_done = True   
         
 
 
