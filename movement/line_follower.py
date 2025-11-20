@@ -1,20 +1,21 @@
-from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
+from ..utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
 import math
 import time
 # We follow the left edge of the line 
 
 
 # CONTROL PARAMETERS
-BASE_SPEED = -120  # default wheel DPS
-KP = -1.3  # adjusts sharpness of turns, the less the smoother
-TARGET = 35.0  # Color sensor is halfway between black and white, at the edge of a line
+BASE_SPEED = -120       # default wheel DPS
+KP = -1.3               # adjusts sharpness of turns, the less the smoother
+TARGET = 35.0           # Color sensor is halfway between black and white, at the edge of a line
+BLACK = 15              # color sensor reading for black on full line
 MAX_CORRECTION = 100
 BLACK_THRESHOLD = 10    # color sensor is placed at exact middle of line
 WHITE_THRESHOLD = 36    # color sensor is on full white
 
 # MOVEMENT PARAMETERS
-DIAMETER = 4.0 #radius of wheel in cm
-CM_PER_DEG = (math.pi * DIAMETER) / 360  # Conversion factor from cm to degrees for 2 cm radius wheels
+DIAMETER = 4.0                          #radius of wheel in cm
+CM_PER_DEG = (math.pi * DIAMETER) / 360 # Conversion factor from cm to degrees for 2 cm radius wheels
 DISTTODEG = 360 / (math.pi * DIAMETER)  # Conversion factor from cm to degrees for 2 cm radius wheels
 
 # MOTORS & SENSORS
@@ -238,77 +239,18 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     turning = True
     while turning:
         curr_val = get_reflected_light_reading(color_sensor, 3)
+        
         # stop turning once target point has been reached
         # kept flexible
-        if curr_val < TARGET:
-            stop()
+        if curr_val < BLACK: 
+            # stop robot, but let outer wheel roll for a little longer
+            # to offset robot onto the left edge of path
+            inner_wheel.set_dps(0)
+            time.sleep(0.1)
+            outer_wheel.set_dps(0)
+
             turning = False
             print("stopped")
-            simple_move_straight(5) #move a bit forward to stabilize on line
+            move_straight(5) #move a bit forward to stabilize on line
 
         
-
-   
-
-
-# def turn_right_90(left_motor: Motor,
-#                   right_motor: Motor, 
-#                   color_sensor: EV3ColorSensor, 
-#                   target: float = TARGET
-#                   ) -> float:
-#     """ 
-#     Performs a 90° right turn using the color sensor to detect the line 
-    
-#     Args:
-#         left_motor: Motor instance for the left wheel.
-#         right_motor: Motor instance for the right wheel.
-#         color_sensor: EV3ColorSensor instance.
-#         target: Reflected light value to detect the line.
-#     Returns: time taken to do the turn for undo function
-#     """
-#     # Rotate in place until black is detected again
-#     curr_time = time.time()
-#     while True:
-#         left_motor.set_dps(100)
-#         right_motor.set_dps(-100)
-#         if color_sensor.get_red() <= target:
-#             break
-#     done_time = time.time()
-#     time_taken = done_time - curr_time
-#      # Move forward a bit to stabilize onto the new line
-#     left_motor.set_dps(120)
-#     right_motor.set_dps(120)
-#     busy_sleep(0.2)
-
-#     left_motor.set_dps(0)
-#     right_motor.set_dps(0)
-
-#     return time_taken
-
-# def undo_turn_right_90( left_motor  : Motor,
-#                         right_motor : Motor,
-#                         time_taken  : float,
-#                     ) -> None:
-#     """ 
-#     Performs a 90° left and back
-    
-#     Args:
-#         left_motor: Motor instance for the left wheel.
-#         right_motor: Motor instance for the right wheel.
-#         color_sensor: EV3ColorSensor instance.
-#         target: Reflected light value to detect the line.
-#     """
-#     left_motor.set_dps(-120)
-#     right_motor.set_dps(-120)
-#     busy_sleep(0.2)
-
-#     start_time = time.time()
-#     while (time.time() - start_time) < time_taken:
-#         left_motor.set_dps(-100)
-#         right_motor.set_dps(100)
-
-#     left_motor.set_dps(0)
-#     right_motor.set_dps(0)
-
-
-     
