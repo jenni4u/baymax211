@@ -7,14 +7,18 @@ right_motor = Motor("C")
 color_sensor = EV3ColorSensor(1, mode="red")    
 
 # INTERSECTION PATTERN
-ROOM = 0
-ST_ROOM = 1
-NEW_EDGE = 2
-INTERSECTION_PATTERN = [ST_ROOM, NEW_EDGE, ROOM,    # False = ignore and go straight
-                        ST_ROOM, NEW_EDGE, ROOM,    # True = take 90° right turn
-                        ST_ROOM, NEW_EDGE, ROOM,    # This is assuming we are starting facing North
-                        ST_ROOM, ROOM]         
-INTERSECTION_PATTERN_SOUTH = []   
+ROOM = 0        # Meeting Room
+ST_ROOM = 1     # Storage Room
+NEW_EDGE = 2    # at corner
+DEADEND = 3
+# INTERSECTION_PATTERN = [ST_ROOM, NEW_EDGE, ROOM,    # This is assuming we are starting facing North
+#                         ST_ROOM, NEW_EDGE, ROOM,    
+#                         ST_ROOM, NEW_EDGE, ROOM,    
+#                         ST_ROOM, ROOM]         
+INTERSECTION_PATTERN = [ROOM, ST_ROOM, ROOM,
+                        NEW_EDGE, DEADEND, ROOM,
+                        NEW_EDGE, ST_ROOM, ROOM,
+                        NEW_EDGE, DEADEND]   
 
 wait_ready_sensors(True)
 

@@ -183,6 +183,28 @@ def move_straight_distance(distance: float,
         right_motor.set_dps(0)
         busy_sleep(2)
 
+def test_turn(left_motor: Motor = LEFT_WHEEL, 
+              right_motor: Motor = RIGHT_WHEEL,
+              color_sensor: EV3ColorSensor = COLOR_SENSOR):
+    right_motor.set_dps(BASE_SPEED)
+
+    turning = True
+    while turning:
+        curr_val = get_reflected_light_reading(color_sensor, 3)
+        
+        # stop turning once target point has been reached
+        # kept flexible
+        if curr_val < BLACK_THRESHOLD: 
+            # continue turning until we find target spot again
+            while curr_val < TARGET - TARGET_THRESHOLD:
+                curr_val = get_reflected_light_reading(color_sensor, 3)
+                continue     
+
+            turning = False
+            stop()
+            print("stopped")
+            # move_straight_distance(5) #move a bit forward to stabilize on line
+
 
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
                 right_motor: Motor = RIGHT_WHEEL,
@@ -236,11 +258,13 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
                 continue     
 
             turning = False
+            stop()
             print("stopped")
             # move_straight_distance(5) #move a bit forward to stabilize on line
 
 
-def line_follower(left_motor: Motor = LEFT_WHEEL, 
+def line_follower(direction: bool = True,
+                  left_motor: Motor = LEFT_WHEEL, 
                   right_motor: Motor = RIGHT_WHEEL, 
                   color_sensor: EV3ColorSensor = COLOR_SENSOR,
                   kp: float = KP, 
@@ -260,7 +284,13 @@ def line_follower(left_motor: Motor = LEFT_WHEEL,
         target: Target reflected light value.
         base_speed: Base speed of the motors.
     """
-    
+    # Determine direction multiplier
+    # if forward, keep dps as is, otherwise reverse
+    if direction:
+        direction = 1
+    else:
+        direction = -1
+
     left_motor.reset_encoder()
     right_motor.reset_encoder()
 
@@ -276,9 +306,9 @@ def line_follower(left_motor: Motor = LEFT_WHEEL,
           correction_factor: float = (curr_val - target) * kp
           print("correction factor is: " + str(correction_factor))
 
-          # Apply correction to motor speeds
-          left_motor.set_dps(base_speed - correction_factor)
-          right_motor.set_dps(base_speed + correction_factor)
+          # Apply correction to motor speeds, corrected with direction
+          left_motor.set_dps((base_speed - correction_factor) * direction)
+          right_motor.set_dps((base_speed + correction_factor) * direction)
           busy_sleep(0.05)
 
     left_motor.set_dps(0)
