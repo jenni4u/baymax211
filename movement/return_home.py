@@ -5,9 +5,8 @@ def move_to_storage_room():
     """
     Moves robot from intersection to storage room.
     """
-    #TODO: measure distances to put in the 2 functions
-    lf.line_follower_distance(0)
-    lf.move_forward(0)
+    lf.line_follower_distance(33.3)
+    lf.move_forward(15)
 
 def return_home(room: int):
     """
