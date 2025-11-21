@@ -82,74 +82,6 @@ def move_forward(distance,
         right_wheel.set_position_relative(degrees)
     busy_sleep(2)
 
-def turn_room(left_motor: Motor = LEFT_WHEEL, 
-                       right_motor: Motor = RIGHT_WHEEL, 
-                       diameter_axis: int = 12.00, 
-                       radius: float = DIAMETER/2, 
-                       dps: int = BASE_SPEED) -> None:
-    """
-    Turns the robot 90 degrees to the right on the spot.
-    Args:
-        left_motor: Motor instance for the left wheel.
-        right_motor: Motor instance for the right wheel.
-        diameter_axis: Distance between the two wheels (cm).
-        radius: Radius of the wheels (cm).
-        rps: Rotations per second for the motors.
-    """
-    # move forward to position robot for turn
-    move_forward(17.5)
-    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
-    stop_time = time.time() + time_needed
-    while time.time() < stop_time:
-        left_motor.set_dps(-dps)
-        right_motor.set_dps(dps)
-    left_motor.set_dps(0)
-    right_motor.set_dps(0)
-    busy_sleep(1)
-
-def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
-                            right_motor: Motor = RIGHT_WHEEL,
-                            color_sensor: EV3ColorSensor = COLOR_SENSOR,
-                            dps: int = BASE_SPEED,
-                            ) -> float:
-    move_forward(17.5)
-    while color_sensor.get_red() > BLACK_THRESHOLD:
-        left_motor.set_dps(-dps)
-        right_motor.set_dps(dps)
-        busy_sleep(0.02)
-    left_motor.set_dps(0)
-    right_motor.set_dps(0)
-    while color_sensor.get_red() < TARGET:
-        left_motor.set_dps(-dps)
-        right_motor.set_dps(dps)
-        busy_sleep(0.02)
-    left_motor.set_dps(0)
-    right_motor.set_dps(0)
-    
-
-def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
-                            right_motor: Motor = RIGHT_WHEEL, 
-                            diameter_axis: int = 12.00, 
-                            radius: int = DIAMETER/2, 
-                            dps: int = BASE_SPEED) -> None:
-    """
-    Turns the robot 90 degrees to the left on the spot (undo right turn).
-    Args:
-        left_motor: Motor instance for the left wheel.
-        right_motor: Motor instance for the right wheel.
-        diameter_(axis: Distance between the two wheels (cm).
-        radius: Radius of the wheels (cm).
-        rps: Rotations per second for the motors.
-    """
-    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
-    stop_time = time.time() + time_needed
-    while time.time() < stop_time:
-        left_motor.set_dps(dps)
-        right_motor.set_dps(-dps)
-    left_motor.set_dps(0)
-    right_motor.set_dps(0)
-    busy_sleep(1)
-
 def line_follower_distance(distance: float,
                          left_motor: Motor = LEFT_WHEEL, 
                          right_motor: Motor = RIGHT_WHEEL,
@@ -270,6 +202,76 @@ def line_follower(direction: bool = True,
 
     left_motor.set_dps(0)
     right_motor.set_dps(0)
+
+def turn_room(left_motor: Motor = LEFT_WHEEL, 
+                       right_motor: Motor = RIGHT_WHEEL, 
+                       diameter_axis: int = 12.00, 
+                       radius: float = DIAMETER/2, 
+                       dps: int = BASE_SPEED) -> None:
+    """
+    Turns the robot 90 degrees to the right on the spot.
+    Args:
+        left_motor: Motor instance for the left wheel.
+        right_motor: Motor instance for the right wheel.
+        diameter_axis: Distance between the two wheels (cm).
+        radius: Radius of the wheels (cm).
+        rps: Rotations per second for the motors.
+    """
+    # move forward to position robot for turn
+    line_follower_distance(17.5)
+    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
+    stop_time = time.time() + time_needed
+    while time.time() < stop_time:
+        left_motor.set_dps(-dps)
+        right_motor.set_dps(dps)
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
+    busy_sleep(1)
+
+def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
+                            right_motor: Motor = RIGHT_WHEEL,
+                            color_sensor: EV3ColorSensor = COLOR_SENSOR,
+                            dps: int = BASE_SPEED,
+                            ) -> float:
+    line_follower_distance(17.5)
+    while color_sensor.get_red() > BLACK_THRESHOLD:
+        left_motor.set_dps(-dps)
+        right_motor.set_dps(dps)
+        busy_sleep(0.02)
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
+    while color_sensor.get_red() < TARGET:
+        left_motor.set_dps(-dps)
+        right_motor.set_dps(dps)
+        busy_sleep(0.02)
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
+    
+
+def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
+                            right_motor: Motor = RIGHT_WHEEL, 
+                            diameter_axis: int = 12.00, 
+                            radius: int = DIAMETER/2, 
+                            dps: int = BASE_SPEED) -> None:
+    """
+    Turns the robot 90 degrees to the left on the spot (undo right turn).
+    Args:
+        left_motor: Motor instance for the left wheel.
+        right_motor: Motor instance for the right wheel.
+        diameter_(axis: Distance between the two wheels (cm).
+        radius: Radius of the wheels (cm).
+        rps: Rotations per second for the motors.
+    """
+    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
+    stop_time = time.time() + time_needed
+    while time.time() < stop_time:
+        left_motor.set_dps(dps)
+        right_motor.set_dps(-dps)
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
+    busy_sleep(1)
+
+
 
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
                 right_motor: Motor = RIGHT_WHEEL,
