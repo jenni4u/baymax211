@@ -78,38 +78,39 @@ def move_back_to_door_after_scanning():
         total_distance (float): The total distance the robot travelled in the room
 """
 def package_delivery(total_distance):
-        
-    # First determine how much the color sensor arm should move to allow the dropping of the block (?????)
-    # -> NEEDS TESTING ON THE POSITION OF THE ARM (POSITIVE, NEGATIVE, AT 0, ETC) 
-    degree_rotation = 0
-    if(pendulum_mvt.motor_color_sensor.get_position() < 0):
-        degree_rotation = 17
-    else :
-        degree_rotation = -17
+    
+    
+    drop_angle = 0
+    initial_color_angle = pendulum_mvt.motor_color_sensor.get_position()
+    if initial_color_angle < 0:
+        drop_angle = initial_color_angle + 28 
+    else:
+        drop_angle = initial_color_angle - 28
 
+    pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS - 100)
+    pendulum_mvt.motor_color_sensor.set_position(drop_angle)
+    time.sleep(2.5)      
 
-    # Set a speed to the color sensor arm and move it by degree_rotation, and waits for 3 seconds (???) for the dropping of the block
-    pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS)
-    #(???) Not sure if this is how we set the new position of the arm (by substracting the degree_rotation)
-    pendulum_mvt.motor_color_sensor.set_position(pendulum_mvt.motor_color_sensor.get_position() - degree_rotation)
-    time.sleep(3)
-
+    # Stop the arm
     pendulum_mvt.motor_color_sensor.set_dps(0)
 
+    # 4. Move the arm back to its exact original angle
+    pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS - 100)
+    pendulum_mvt.motor_color_sensor.set_position(initial_color_angle)
+    time.sleep(1.5)
+    pendulum_mvt.motor_color_sensor.set_dps(0)
 
-    # Backup the robot a little (???), to reinitialize the position
-    # The reason we backup a little is to ensure that, once the arms move, they don't get blocked by the block
+    # 5. Backup slightly to avoid hitting the block
     move_robot(-DISTANCE_PER_SCANNING, 150)
-    time.sleep(0.3)
+    time.sleep(0.4)
 
-
-    # Set both arms to positon 0 using a function defined in pendulum_mvt : reset_both_motors_to_initial_position()
-    # This function uses threading to move both arms at the same time
+    # 6. Reset BOTH arms to position 0 at the same time
     pendulum_mvt.reset_both_motors_to_initial_position()
-    time.sleep(1)  
+    time.sleep(1)
 
-    # Move the robot of the remaining distance to reach the door (The total_distance it travelled - little backup) (????)
-    move_robot(-(total_distance - DISTANCE_PER_SCANNING), 150)
+    # 7. Move robot the remaining distance back toward the door
+    remaining = total_distance - DISTANCE_PER_SCANNING
+    move_robot(-remaining, 150)
     time.sleep(1)
          
 

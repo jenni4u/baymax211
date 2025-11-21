@@ -3,8 +3,8 @@ from brickpi3 import SensorError
 from color_detection_algorithm import ColorDetectionAlgorithm
 import time
 import threading
-# from utils.sound import play_success
-from utils import sound
+from playsound3 import playsound
+#from utils import sound
 
 
 #----------- CONSTANTS -----------#
@@ -13,15 +13,15 @@ LEFT_POSITION = -45
 RIGHT_POSITION = 45
 MOTOR_DPS = 150
 TIME_SLEEP = 1.5
-SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
+#SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
 COLOR_SENSOR = EV3ColorSensor(3)
 
 #----- COLOR DETECTION OBJECT -----#
 color_detection_algorithm = ColorDetectionAlgorithm()
 
 #------------- SETUP -------------#
-motor_color_sensor = Motor("D") 
-motor_block = Motor("A")  
+motor_color_sensor = Motor("A") 
+motor_block = Motor("D")  
 wait_ready_sensors()
 motor_color_sensor.reset_encoder()
 motor_block.reset_encoder()
@@ -99,8 +99,7 @@ def color_sample():
                 if (count_green >=5):
                     color = "green"
                     stop_the_arms_movement(color)
-                    #play_success
-                    SOUND_GREEN.play() #Play the music   
+                    playsound("sounds/balalala.wav") 
                 else:
                     color = None
   
