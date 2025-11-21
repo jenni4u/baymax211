@@ -61,6 +61,26 @@ def stop(left_motor: Motor = LEFT_WHEEL,
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 
+def move_forward(distance,
+                 left_wheel: Motor = LEFT_WHEEL,
+                 right_wheel: Motor= RIGHT_WHEEL) -> None:
+    """Move the robot forward by a certain distance."""
+    # set motor limits (use absolute DPS for limits)
+    right_wheel.set_limits(100, dps=abs(BASE_SPEED))
+    left_wheel.set_limits(100, dps=abs(BASE_SPEED))
+
+    # convert absolute distance (cm) to wheel degrees
+    degrees = abs(distance) * DISTTODEG
+
+    if distance >= 0:
+        # forward: use same sign convention as previous implementation
+        left_wheel.set_position_relative(-degrees)
+        right_wheel.set_position_relative(-degrees)
+    else:
+        # reverse: rotate wheels in opposite direction
+        left_wheel.set_position_relative(degrees)
+        right_wheel.set_position_relative(degrees)
+    busy_sleep(2)
 
 def turn_room(left_motor: Motor = LEFT_WHEEL, 
                        right_motor: Motor = RIGHT_WHEEL, 
@@ -76,6 +96,8 @@ def turn_room(left_motor: Motor = LEFT_WHEEL,
         radius: Radius of the wheels (cm).
         rps: Rotations per second for the motors.
     """
+    # move forward to position robot for turn
+    move_forward(17.5)
     time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
     while time.time() < stop_time:
@@ -90,7 +112,7 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
                             color_sensor: EV3ColorSensor = COLOR_SENSOR,
                             dps: int = BASE_SPEED,
                             ) -> float:
-    time_start = time.time()
+    move_forward(17.5)
     while color_sensor.get_red() > BLACK_THRESHOLD:
         left_motor.set_dps(-dps)
         right_motor.set_dps(dps)
@@ -128,30 +150,7 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
     right_motor.set_dps(0)
     busy_sleep(1)
 
-
-def move_forward(distance,
-                 left_wheel: Motor = LEFT_WHEEL,
-                 right_wheel: Motor= RIGHT_WHEEL) -> None:
-    """Move the robot forward by a certain distance."""
-    # set motor limits (use absolute DPS for limits)
-    right_wheel.set_limits(100, dps=abs(BASE_SPEED))
-    left_wheel.set_limits(100, dps=abs(BASE_SPEED))
-
-    # convert absolute distance (cm) to wheel degrees
-    degrees = abs(distance) * DISTTODEG
-
-    if distance >= 0:
-        # forward: use same sign convention as previous implementation
-        left_wheel.set_position_relative(-degrees)
-        right_wheel.set_position_relative(-degrees)
-    else:
-        # reverse: rotate wheels in opposite direction
-        left_wheel.set_position_relative(degrees)
-        right_wheel.set_position_relative(degrees)
-    busy_sleep(2)
-
-
-def move_straight_distance(distance: float,
+def line_follower_distance(distance: float,
                          left_motor: Motor = LEFT_WHEEL, 
                          right_motor: Motor = RIGHT_WHEEL,
                          color_sensor: EV3ColorSensor = COLOR_SENSOR,
@@ -159,7 +158,7 @@ def move_straight_distance(distance: float,
                          target: float = TARGET
                          ) -> None:
     """
-    Moves the robot straight for a specified distance.
+    Follows line for a specified distance. The robot moves straight.
     Args:
         left_motor: Motor instance for the left wheel.
         right_motor: Motor instance for the right wheel.
@@ -217,28 +216,60 @@ def move_straight_distance(distance: float,
         right_motor.set_dps(0)
         busy_sleep(2)
 
-def test_turn(left_motor: Motor = LEFT_WHEEL, 
-              right_motor: Motor = RIGHT_WHEEL,
-              color_sensor: EV3ColorSensor = COLOR_SENSOR):
-    right_motor.set_dps(BASE_SPEED)
+def line_follower(direction: bool = True,
+                  left_motor: Motor = LEFT_WHEEL, 
+                  right_motor: Motor = RIGHT_WHEEL, 
+                  color_sensor: EV3ColorSensor = COLOR_SENSOR,
+                  kp: float = KP, 
+                  target: float = TARGET, 
+                  base_speed: float = BASE_SPEED
+                  ) -> None:
+    """ 
+    Follows line indefinitely until black threshold is crossed (intersection).
+    Follows left edge of the line, half on line half on white is ideal position
+    If sees too much black, will turn left 
+    If sees too much white, will turn right 
 
-    turning = True
-    while turning:
-        curr_val = get_reflected_light_reading(color_sensor, 3)
+    Args:
+        left_motor: Motor instance for the left wheel.
+        right_motor: Motor instance for the right wheel.
+        color_sensor: EV3ColorSensor instance.
+        kp: Proportional gain for correction.
+        target: Target reflected light value.
+        base_speed: Base speed of the motors.
+    """
+    # Determine direction multiplier
+    # if forward, keep dps as is, otherwise reverse
+    if direction:
+        direction = 1
+    else:
+        direction = -1
+
+    left_motor.reset_encoder()
+    right_motor.reset_encoder()
+
+    curr_val: float = get_reflected_light_reading(color_sensor, 3)
+    print("curr_val" + str(curr_val))
+    
+    while curr_val > BLACK_THRESHOLD:
+          # Get current reflected light value
+          curr_val: float = get_reflected_light_reading(color_sensor, 3)
+          print("curr_val" + str(curr_val))
         
-        # stop turning once target point has been reached
-        # kept flexible
-        if curr_val < BLACK_THRESHOLD: 
-            # continue turning until we find target spot again
-            while curr_val < TARGET - TARGET_THRESHOLD:
-                curr_val = get_reflected_light_reading(color_sensor, 3)
-                continue     
+          # Calculate correction factor
+          correction_factor: float = -(curr_val - target) * kp
+          print("correction factor is: " + str(correction_factor))
 
-            turning = False
-            stop()
-            print("stopped")
-            line_follower()
+          # Apply correction to motor speeds, corrected with direction
+          left_motor.set_dps((base_speed - correction_factor) * direction)
+          right_motor.set_dps((base_speed + correction_factor) * direction)
+          busy_sleep(0.03)
+          curr_val: float = get_reflected_light_reading(color_sensor, 3)
+          print("curr_val" + str(curr_val))
 
+
+    left_motor.set_dps(0)
+    right_motor.set_dps(0)
 
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
                 right_motor: Motor = RIGHT_WHEEL,
@@ -294,59 +325,11 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
             turning = False
             stop()
             print("stopped")
-            # move_straight_distance(5) #move a bit forward to stabilize on line
+
+            #TODO: remove below, left for testing
+            print("moving forward to stabilize on line")
+            line_follower()
+            print("line_follower stopped")
+            # move_straight_distance(5)
 
 
-def line_follower(direction: bool = True,
-                  left_motor: Motor = LEFT_WHEEL, 
-                  right_motor: Motor = RIGHT_WHEEL, 
-                  color_sensor: EV3ColorSensor = COLOR_SENSOR,
-                  kp: float = KP, 
-                  target: float = TARGET, 
-                  base_speed: float = BASE_SPEED
-                  ) -> None:
-    """ 
-    Follows left edge of the line, half on line half on white is ideal position
-    If sees too much black, will turn left 
-    If sees too much white, will turn right 
-
-    Args:
-        left_motor: Motor instance for the left wheel.
-        right_motor: Motor instance for the right wheel.
-        color_sensor: EV3ColorSensor instance.
-        kp: Proportional gain for correction.
-        target: Target reflected light value.
-        base_speed: Base speed of the motors.
-    """
-    # Determine direction multiplier
-    # if forward, keep dps as is, otherwise reverse
-    if direction:
-        direction = 1
-    else:
-        direction = -1
-
-    left_motor.reset_encoder()
-    right_motor.reset_encoder()
-
-    curr_val: float = get_reflected_light_reading(color_sensor, 3)
-    print("curr_val" + str(curr_val))
-    
-    while curr_val > BLACK_THRESHOLD:
-          # Get current reflected light value
-          curr_val: float = get_reflected_light_reading(color_sensor, 3)
-          print("curr_val" + str(curr_val))
-        
-          # Calculate correction factor
-          correction_factor: float = -(curr_val - target) * kp
-          print("correction factor is: " + str(correction_factor))
-
-          # Apply correction to motor speeds, corrected with direction
-          left_motor.set_dps((base_speed - correction_factor) * direction)
-          right_motor.set_dps((base_speed + correction_factor) * direction)
-          busy_sleep(0.03)
-          curr_val: float = get_reflected_light_reading(color_sensor, 3)
-          print("curr_val" + str(curr_val))
-
-
-    left_motor.set_dps(0)
-    right_motor.set_dps(0)
