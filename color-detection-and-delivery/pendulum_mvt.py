@@ -3,7 +3,8 @@ from brickpi3 import SensorError
 from color_detection_algorithm import ColorDetectionAlgorithm
 import time
 import threading
-from utils.sound import play_success
+# from utils.sound import play_success
+from utils import sound
 
 
 #----------- CONSTANTS -----------#
@@ -13,7 +14,7 @@ RIGHT_POSITION = 45
 MOTOR_DPS = 150
 TIME_SLEEP = 1.5
 
-#SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
+SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
 
 #----- Color detection object -----#
 csa = ColorDetectionAlgorithm()
@@ -62,7 +63,8 @@ def color_sample():
                     stop = True
                     motor_pendulum.set_dps(0)
                     motor_block.set_dps(0)
-                    play_success
+                    #play_success
+                    SOUND_GREEN.play()
                     
                 else:
                     color = None
@@ -97,11 +99,15 @@ def move_motor_pendulum():
     #if TOUCH_SENSOR.is_pressed(): 
         
     motor_pendulum.set_dps(MOTOR_DPS)
-    
+    time.sleep(0.01)
     if stop:
         motor_pendulum.set_dps(0)
-        
-    elif(motor_pendulum.get_position() >= 0) :
+    elif (motor_pendulum.get_position()==0):
+        motor_pendulum.set_position(LEFT_POSITION)
+        time.sleep(1)
+        motor_pendulum.set_position(RIGHT_POSITION)
+        time.sleep(1)
+    elif(motor_pendulum.get_position() > 0) :
         motor_pendulum.set_position(LEFT_POSITION)
         time.sleep(1)
     else :
@@ -123,10 +129,15 @@ def move_motor_block():
     #if TOUCH_SENSOR.is_pressed(): 
         
     motor_block.set_dps(MOTOR_DPS)
+    time.sleep(0.01)
 
     if stop:
         motor_block.set_dps(0)
-        
+    elif (motor_block.get_position() == 0):
+        motor_block.set_position(LEFT_POSITION)
+        time.sleep(1)
+        motor_block.set_position(RIGHT_POSITION)
+        time.sleep(1)
     elif(motor_block.get_position() >= 0) :
         motor_block.set_position(LEFT_POSITION)
         time.sleep(1)
