@@ -16,12 +16,6 @@ TIME_SLEEP = 1.5
 SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
 COLOR_SENSOR = EV3ColorSensor(3)
 
-#-------- GLOBAL VARIABLES ---------#
-detected_color = None
-stopped_color_detection = False  # Boolean that ensures the color sensor can keep reading values
-stopped_motor_color_sensor = False # Boolean that verifies that the color sensor arm is moving
-stopped_motor_block = False # Boolean that verifies that the block arm is moving
-
 #----- COLOR DETECTION OBJECT -----#
 color_detection_algorithm = ColorDetectionAlgorithm()
 
@@ -216,6 +210,13 @@ def move_motor_block():
         String: Return the color detected in the room when the 3 systems stopped running : Red, Green or None
 """
 def main_pendulum():
+
+    global detected_color, stopped_color_detection, stopped_motor_block, stopped_motor_color_sensor
+
+    detected_color = None
+    stopped_color_detection = False # Boolean that ensures the color sensor can keep reading values
+    stopped_motor_block = False # Boolean that verifies that the  block arm is moving
+    stopped_motor_color_sensor = False # Boolean that verifies that the color sensor arm is moving
 
     try:
 
