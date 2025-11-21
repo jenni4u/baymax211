@@ -273,7 +273,7 @@ def line_follower(direction: bool = True,
 
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
                 right_motor: Motor = RIGHT_WHEEL,
-                color_sensor: EV3ColorSensor = COLOR_SENSOR): #TODO: add all the parameters to be able to use function outside of this file
+                color_sensor: EV3ColorSensor = COLOR_SENSOR):
     """
     Turn the robot to the left until the color sensor detects the line again.
     """

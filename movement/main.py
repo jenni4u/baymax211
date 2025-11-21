@@ -22,43 +22,6 @@ INTERSECTION_PATTERN = [ROOM, ST_ROOM, ROOM,
                         CORNER, ST_ROOM, ROOM,
                         CORNER, ST_ROOM]   
 
-delivery_counter = 0
-room_counter = 0
-
-for i in range(len(INTERSECTION_PATTERN)):
-
-    # move until next intersection
-    lf.line_follower(left_motor, right_motor, color_sensor)
-
-    if INTERSECTION_PATTERN[i] == ROOM:
-        print("At meeting room, turning left 90 degrees")
-
-        # enter and scan room
-        lf.turn_room(left_motor, right_motor)
-        #TODO: add room scanning function here, have it return True upon successful delivery
-        # if SCANNING_FUNCTION():
-        #     delivery_counter += 1
-        #     print(f"Delivery successful! Total deliveries: {delivery_counter}")
-        lf.undo_turn_room(left_motor, right_motor)
-        
-        # update room number
-        room_counter += 1
-
-        # go back to storage room if 2 deliveries completed
-        if delivery_counter == 2:
-            print("All deliveries completed.")
-            return_home(room_counter)
-            break
-
-    elif INTERSECTION_PATTERN[i] == CORNER:
-        print("At new edge, smooth turning left")
-        lf.smooth_turn(left_motor, right_motor)
-
-    elif INTERSECTION_PATTERN[i] == ST_ROOM:
-        print("At storage room, skipping for now")
-        busy_sleep(2) #NOTE: why do we have this here?
-
-
 # i = 0
 # while i < len(intersection_pattern):
 #     lf.line_follower(left_motor, right_motor, color_sensor)
@@ -84,7 +47,44 @@ for i in range(len(INTERSECTION_PATTERN)):
 # lf.undo_turn_left_on_self(left_motor, right_motor)
 # lf.line_follower(left_motor, right_motor, color_sensor)
 
+if __name__ == "__main__":
 
+    # counters    
+    delivery_counter = 0
+    room_counter = 0
+
+    for i in range(len(INTERSECTION_PATTERN)):
+
+        # move until next intersection
+        lf.line_follower(left_motor, right_motor, color_sensor)
+
+        if INTERSECTION_PATTERN[i] == ROOM:
+            print("At meeting room, turning left 90 degrees")
+
+            # enter and scan room
+            lf.turn_room(left_motor, right_motor)
+            #TODO: add room scanning function here, have it return True upon successful delivery
+            # if SCANNING_FUNCTION():
+            #     delivery_counter += 1
+            #     print(f"Delivery successful! Total deliveries: {delivery_counter}")
+            lf.undo_turn_room(left_motor, right_motor)
+            
+            # update room number
+            room_counter += 1
+
+            # go back to storage room if 2 deliveries completed
+            if delivery_counter == 2:
+                print("All deliveries completed.")
+                return_home(room_counter)
+                break
+
+        elif INTERSECTION_PATTERN[i] == CORNER:
+            print("At new edge, smooth turning left")
+            lf.smooth_turn(left_motor, right_motor)
+
+        elif INTERSECTION_PATTERN[i] == ST_ROOM:
+            print("At storage room, skipping for now")
+            busy_sleep(2) #NOTE: why do we have this here?
 
 
 
