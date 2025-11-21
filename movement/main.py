@@ -56,7 +56,7 @@ if __name__ == "__main__":
     for i in range(len(INTERSECTION_PATTERN)):
 
         # move until next intersection
-        lf.line_follower(left_motor, right_motor, color_sensor)
+        lf.line_follower(left_motor=left_motor, right_motor=right_motor, color_sensor=color_sensor)
 
         if INTERSECTION_PATTERN[i] == ROOM:
             print("At meeting room, turning left 90 degrees")
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
         elif INTERSECTION_PATTERN[i] == ST_ROOM:
             print("At storage room, skipping for now")
-            busy_sleep(2) #NOTE: why do we have this here?
+            lf.line_follower_distance(3)
 
 
 
