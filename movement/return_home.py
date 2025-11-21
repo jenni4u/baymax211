@@ -1,25 +1,52 @@
-from utils.brick import Sound
+
 import line_follower as lf
 
-def success_sound(sound_file):
-    """Play a sound to indicate successful return."""
-    
-    sound = Sound()
-    sound.play_file(sound_file)
+def move_to_storage_room():
+    """
+    Moves robot from intersection to storage room.
+    """
+    #TODO: measure distances to put in the 2 functions
+    lf.line_follower_distance(0)
+    lf.move_forward(0)
 
-
-def return_home(room):
+def return_home(room: int):
     """
     Returns robot to storage room from specified room.  
     """
 
-    if room == 1:
+    if room == 1 or room == 3:
+        # back up
         lf.line_follower(False)
 
         # turn towards storage room
         # assumes readjustments and alignment are included in the turning function
-        lf.turn_right_on_self() 
-        lf.line_follower() #TODO: measure distance and add
+        lf.turn_storage_room() 
+
+        move_to_storage_room()
         
-        
+        #TODO:play sucess sound, use Maria's function
+    elif room == 2:
+        # move forward to corner
+        lf.line_follower()
+
+        # turning at the top right corner
+        lf.smooth_turn()
+
+        #move forward to storage room intersection
+        lf.line_follower()
+
+        # turn towards storage room
+        # assumes readjustments and alignment are included in the turning function
+        lf.turn_storage_room()
+        move_to_storage_room()
+    elif room == 4:
+        #move forward to storage room intersection
+        lf.line_follower()
+
+        lf.turn_storage_room()
+
+        move_to_storage_room()
+
+
+
 
