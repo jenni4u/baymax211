@@ -277,8 +277,10 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     """
     Turn the robot to the left until the color sensor detects the line again.
     """
-    #TODO: clean these up and put them on top
+    #TODO: measure proper distance to move forward before turning
+    move_forward(8.5)
 
+    #TODO: clean variables up and put them on top
     # TURNING PARAMETERS
     DISTANCE_WHEEL_FROM_CENTER = 5.51 #distance between wheels in cm
     CENTER = 12
@@ -327,9 +329,9 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
             print("stopped")
 
             #TODO: remove below, left for testing
-            print("moving forward to stabilize on line")
-            line_follower()
-            print("line_follower stopped")
+            # print("moving forward to stabilize on line")
+            # line_follower()
+            # print("line_follower stopped")
             # move_straight_distance(5)
 
 
