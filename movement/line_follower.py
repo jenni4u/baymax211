@@ -278,6 +278,7 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     Turn the robot to the left until the color sensor detects the line again.
     """
     #TODO: measure proper distance to move forward before turning
+    # the axis of the wheels should be lined up with the grey line of the tile
     move_forward(8.5)
 
     #TODO: clean variables up and put them on top

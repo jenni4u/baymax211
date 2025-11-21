@@ -9,9 +9,10 @@ color_sensor = EV3ColorSensor(3, mode="red")
 wait_ready_sensors(True)
 
 # INTERSECTION PATTERN
-ROOM = 0        # Meeting Room
-ST_ROOM = 1     # Storage Room
-CORNER = 2    # at corner
+ROOM = 0     # Meeting Room
+ST_ROOM = 1  # Storage Room
+CORNER = 2   # at corner
+
 # INTERSECTION_PATTERN = [ST_ROOM, NEW_EDGE, ROOM,    # This is assuming we are starting facing North
 #                         ST_ROOM, NEW_EDGE, ROOM,    
 #                         ST_ROOM, NEW_EDGE, ROOM,    
@@ -32,7 +33,7 @@ for i in range(len(INTERSECTION_PATTERN)):
     if INTERSECTION_PATTERN[i] == ROOM:
         print("At meeting room, turning left 90 degrees")
 
-        #enter and scan room
+        # enter and scan room
         lf.turn_room(left_motor, right_motor)
         #TODO: add room scanning function here, have it return True upon successful delivery
         # if SCANNING_FUNCTION():
