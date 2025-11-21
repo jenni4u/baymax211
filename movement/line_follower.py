@@ -279,7 +279,7 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     """
     #TODO: measure proper distance to move forward before turning
     # the axis of the wheels should be lined up with the grey line of the tile
-    move_forward(8.5)
+    move_forward(4)
 
     #TODO: clean variables up and put them on top
     # TURNING PARAMETERS
@@ -321,8 +321,9 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
         # kept flexible
         if curr_val < BLACK_THRESHOLD: 
             # continue turning until we find target spot again
-            while curr_val < TARGET - TARGET_THRESHOLD:
+            while curr_val < TARGET:
                 curr_val = get_reflected_light_reading(color_sensor, 3)
+                print(curr_val)
                 continue     
 
             turning = False
