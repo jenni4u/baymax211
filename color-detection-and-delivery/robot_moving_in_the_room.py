@@ -25,7 +25,7 @@ RIGHT_WHEEL = Motor("C")
 LEFT_WHEEL = Motor("B")
 wait_ready_sensors()
 
-pendulum_mvt.motor_pendulum.reset_encoder()
+pendulum_mvt.motor_color_sensor.reset_encoder()
 pendulum_mvt.motor_block.reset_encoder()
 RIGHT_WHEEL.reset_encoder()
 LEFT_WHEEL.reset_encoder()
@@ -57,9 +57,9 @@ def scan_room():
             if (total_distance>= MAX_ROOM_DISTANCE):
                 RIGHT_WHEEL.set_dps(0)
                 LEFT_WHEEL.set_dps(0)
-                pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
+                pendulum_mvt.motor_color_sensor.set_position(pendulum_mvt.INITIAL_POSITION)
                 time.sleep(1)
-                pendulum_mvt.motor_pendulum.set_dps(0)           
+                pendulum_mvt.motor_color_sensor.set_dps(0)           
                 pendulum_mvt.motor_block.set_position(pendulum_mvt.INITIAL_POSITION)
                 pendulum_mvt.motor_block.set_dps(0)
                 move_robot(-(MAX_ROOM_DISTANCE + DISTANCE_PER_SCANNING/2), 250)
@@ -77,7 +77,7 @@ def scan_room():
                 LEFT_WHEEL.set_dps(0)
 #                 pendulum_mvt.motor_pendulum.set_position(0)
 #                 pendulum_mvt.motor_pendulum.set_dps(0) 
-                print(pendulum_mvt.motor_pendulum.get_position())
+                print(pendulum_mvt.motor_color_sensor.get_position())
 #                 pendulum_mvt.motor_block.set_position(0)
 #                 pendulum_mvt.motor_block.set_dps(0) 
                 time.sleep(1.5)
@@ -95,29 +95,29 @@ def scan_room():
                  
                  
                 degree_rotation = 0
-                if(pendulum_mvt.motor_pendulum.get_position() < 0):
+                if(pendulum_mvt.motor_color_sensor.get_position() < 0):
                     degree_rotation = 17
                 else :
                     degree_rotation = -17
  
-                print("degree rotation", pendulum_mvt.motor_pendulum.get_position() - degree_rotation)
+                print("degree rotation", pendulum_mvt.motor_color_sensor.get_position() - degree_rotation)
  
  
-                pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
-                pendulum_mvt.motor_pendulum.set_position(degree_rotation)
+                pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS)
+                pendulum_mvt.motor_color_sensor.set_position(degree_rotation)
                 time.sleep(3)
  
-                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_color_sensor.set_dps(0)
  
                 print("SUCCESSFULLY MOVED THE COLOR ARM")
  
  
                 move_robot(-DISTANCE_PER_SCANNING, 100)
                 time.sleep(0.3)
-                pendulum_mvt.motor_pendulum.set_dps(pendulum_mvt.MOTOR_DPS)
-                pendulum_mvt.motor_pendulum.set_position(pendulum_mvt.INITIAL_POSITION)
+                pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS)
+                pendulum_mvt.motor_color_sensor.set_position(pendulum_mvt.INITIAL_POSITION)
                 time.sleep(1)
-                pendulum_mvt.motor_pendulum.set_dps(0)
+                pendulum_mvt.motor_color_sensor.set_dps(0)
                 pendulum_mvt.motor_block.set_dps(pendulum_mvt.MOTOR_DPS)
                 pendulum_mvt.motor_block.set_position(pendulum_mvt.INITIAL_POSITION)
  

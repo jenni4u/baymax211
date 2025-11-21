@@ -13,22 +13,19 @@ LEFT_POSITION = -45
 RIGHT_POSITION = 45
 MOTOR_DPS = 150
 TIME_SLEEP = 1.5
-
 SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
 
 #----- Color detection object -----#
 csa = ColorDetectionAlgorithm()
 COLOR_SENSOR = EV3ColorSensor(3)
-color_found = False
 
 #------------- SETUP -------------#
-#ULTRASOUND_SENSOR = EV3UltrasonicSensor(2)
 #TOUCH_SENSOR = TouchSensor(1)
-motor_pendulum = Motor("D") 
+motor_color_sensor = Motor("D") 
 motor_block = Motor("A")  
 #TEST = Motor("D")
 wait_ready_sensors()
-motor_pendulum.reset_encoder()
+motor_color_sensor.reset_encoder()
 motor_block.reset_encoder()
 
 
@@ -61,7 +58,7 @@ def color_sample():
                     color = "green"
                     detected_color = color
                     stop = True
-                    motor_pendulum.set_dps(0)
+                    motor_color_sensor.set_dps(0)
                     motor_block.set_dps(0)
                     #play_success
                     SOUND_GREEN.play()
@@ -73,7 +70,7 @@ def color_sample():
                     color = "red"
                     detected_color = color
                     stop = True
-                    motor_pendulum.set_dps(0)
+                    motor_color_sensor.set_dps(0)
                     motor_block.set_dps(0)
                 
                 else:
@@ -98,24 +95,24 @@ def move_motor_pendulum():
 
     #if TOUCH_SENSOR.is_pressed(): 
         
-    motor_pendulum.set_dps(MOTOR_DPS)
+    motor_color_sensor.set_dps(MOTOR_DPS)
     time.sleep(0.01)
     if stop:
-        motor_pendulum.set_dps(0)
-    elif (motor_pendulum.get_position()==0):
-        motor_pendulum.set_position(LEFT_POSITION)
+        motor_color_sensor.set_dps(0)
+    elif (motor_color_sensor.get_position()==0):
+        motor_color_sensor.set_position(LEFT_POSITION)
         time.sleep(1)
-        motor_pendulum.set_position(RIGHT_POSITION)
+        motor_color_sensor.set_position(RIGHT_POSITION)
         time.sleep(1)
-    elif(motor_pendulum.get_position() > 0) :
-        motor_pendulum.set_position(LEFT_POSITION)
+    elif(motor_color_sensor.get_position() > 0) :
+        motor_color_sensor.set_position(LEFT_POSITION)
         time.sleep(1)
     else :
-        motor_pendulum.set_position(RIGHT_POSITION)
+        motor_color_sensor.set_position(RIGHT_POSITION)
         time.sleep(1)
 
 
-    motor_pendulum.set_dps(0)
+    motor_color_sensor.set_dps(0)
     motor_pendulum_done = True
         
 def move_motor_block(): 
