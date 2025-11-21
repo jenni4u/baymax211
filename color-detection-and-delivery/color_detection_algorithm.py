@@ -65,8 +65,6 @@ class ColorDetectionAlgorithm:
         unknown_green_normalized = unknown_green / total_unknown
         unknown_blue_normalized = unknown_blue / total_unknown
 
-
-
         distances = {} # create a dictionary that stores the color names and their distances with the unknown color
         clusters = self.clusters
 
