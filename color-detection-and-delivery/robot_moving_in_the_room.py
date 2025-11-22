@@ -81,40 +81,40 @@ def package_delivery(total_distance):
     
     
     drop_angle = 0
+    #storing the initial stop angle
     initial_color_angle = pendulum_mvt.motor_color_sensor.get_position()
+    
     if initial_color_angle < 0:
-        drop_angle = initial_color_angle + 28 
+        drop_angle = initial_color_angle + 28 #test to work if it lands all the time
     else:
         drop_angle = initial_color_angle - 28
 
+    #reducing the speed of the motor to make it smoother (??? 100 to slow or to fast?)
     pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS - 100)
     pendulum_mvt.motor_color_sensor.set_position(drop_angle)
     time.sleep(2.5)      
 
-    # Stop the arm
+    #stop the arm
     pendulum_mvt.motor_color_sensor.set_dps(0)
 
-    # 4. Move the arm back to its exact original angle
-    pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS - 100)
+    #move the arm back to its exact initial angle
+    pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS - 100) #(??? 100 to slow or to fast?)
     pendulum_mvt.motor_color_sensor.set_position(initial_color_angle)
     time.sleep(1.5)
     pendulum_mvt.motor_color_sensor.set_dps(0)
 
-    # 5. Backup slightly to avoid hitting the block
+    #backup slightly to avoid hitting the block (required?)
     move_robot(-DISTANCE_PER_SCANNING, 150)
     time.sleep(0.4)
 
-    # 6. Reset BOTH arms to position 0 at the same time
+    #reset both arms to position 0 at the same time
     pendulum_mvt.reset_both_motors_to_initial_position()
     time.sleep(1)
 
-    # 7. Move robot the remaining distance back toward the door
+    #move robot the remaining distance back toward the door
     remaining = total_distance - DISTANCE_PER_SCANNING
     move_robot(-remaining, 150)
     time.sleep(1)
-         
-
-
 
 """
     Function that moves the robot and scan through the whole room
