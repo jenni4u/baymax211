@@ -79,7 +79,7 @@ def move_back_to_door_after_scanning():
 """
 def package_delivery(total_distance):
     
-    
+    # Determine the angle of rotation of the color sensor arm depending on tis position
     drop_angle = 0
     #storing the initial stop angle
     initial_color_angle = pendulum_mvt.motor_color_sensor.get_position()
@@ -120,12 +120,14 @@ def package_delivery(total_distance):
     Function that moves the robot and scan through the whole room
 """
 def scan_room():
+    # Initialize the wheels and the total_distance
     total_distance = 0
     RIGHT_WHEEL.set_dps(0)
     LEFT_WHEEL.set_dps(0)
     LEFT_WHEEL.set_position_relative(0)
     RIGHT_WHEEL.set_position_relative(0)
     time.sleep(0.05)
+    
     try:
         while True:
 
