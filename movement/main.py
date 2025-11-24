@@ -13,40 +13,12 @@ wait_ready_sensors(True)
 ROOM = 0     # Meeting Room
 ST_ROOM = 1  # Storage Room
 CORNER = 2   # at corner
-
-# INTERSECTION_PATTERN = [ST_ROOM, NEW_EDGE, ROOM,    # This is assuming we are starting facing North
-#                         ST_ROOM, NEW_EDGE, ROOM,    
-#                         ST_ROOM, NEW_EDGE, ROOM,    
-#                         ST_ROOM, ROOM]         
+        
 INTERSECTION_PATTERN = [ROOM, ST_ROOM, ROOM,
                         CORNER, ST_ROOM, ROOM,
                         CORNER, ST_ROOM, ROOM,
                         CORNER, ST_ROOM]   
 
-# i = 0
-# while i < len(intersection_pattern):
-#     lf.line_follower(left_motor, right_motor, color_sensor)
-#     if intersection_pattern[i] == lf.ROOM:
-#         print("At meeting room, turning right 90 degrees")
-#         lf.simple_move_straight(17.5, left_motor, right_motor, color_sensor)
-#         lf.turn_right_on_self(left_motor, right_motor)
-#         lf.undo_turn_right_on_self(left_motor, right_motor)
-#     elif intersection_pattern[i] == lf.NEW_EDGE:
-#         print("At new edge, smooth turning right")
-#         lf.simple_move_straight(8.5, left_motor, right_motor, color_sensor)
-#         lf.smooth_turn(left_motor, right_motor)
-#     elif intersection_pattern[i] == lf.ST_ROOM:
-#         print("At storage room, skipping for now")
-#         busy_sleep(2)
-#     i += 1
-
-# lf.line_follower(left_motor, right_motor, color_sensor)
-# lf.line_follower_distance(17.5, left_motor, right_motor, color_sensor)
-# lf.turn_left_on_self(left_motor, right_motor)
-# lf.move_forward(-6.5, left_motor, right_motor)
-# lf.move_forward(6.5, left_motor, right_motor)
-# lf.undo_turn_left_on_self(left_motor, right_motor)
-# lf.line_follower(left_motor, right_motor, color_sensor)
 
 if __name__ == "__main__":
 
