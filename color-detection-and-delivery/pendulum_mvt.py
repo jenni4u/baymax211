@@ -3,17 +3,17 @@ from brickpi3 import SensorError
 from color_detection_algorithm import ColorDetectionAlgorithm
 import time
 import threading
-#from playsound3 import playsound
-from utils import sound
+import sounds_utils
 
 
 #----------- CONSTANTS -----------#
 INITIAL_POSITION = 0
 LEFT_POSITION = -45
+LEFT_POSITION_2 = -40
 RIGHT_POSITION = 45
+RIGHT_POSITION_2 = 40
 MOTOR_DPS = 150
 TIME_SLEEP = 1.5
-SOUND_GREEN = sound.Sound(duration=1, pitch="C5", volume=100)
 COLOR_SENSOR = EV3ColorSensor(3)
 
 #----- COLOR DETECTION OBJECT -----#
@@ -99,8 +99,7 @@ def color_sample():
                 if (count_green >=5):
                     color = "green"
                     stop_the_arms_movement(color)
-                    #playsound("sounds/balalala.wav")
-                    SOUND_GREEN.play() 
+                    sounds_utils.play_wav("balalala.wav")
                 else:
                     color = None
   
@@ -131,9 +130,12 @@ def color_sample():
 
     Args:
         motor (Motor): The robot's arm to move
+        left: the limit angle it turns when going to the left
+        right: the limit angle it turns when going to the right
 """
 
-def move_motor(motor): 
+
+def move_motor(motor, left, right): 
 
     global stopped_color_detection
 
@@ -149,19 +151,19 @@ def move_motor(motor):
     # Initially, before tentering the room, the robot's arm is at a position of 0. 
     # To scan the room's width, it needs to scan left, then right    
     elif (motor.get_position()==0):
-        motor.set_position(LEFT_POSITION)
+        motor.set_position(left)
         time.sleep(1)
-        motor.set_position(RIGHT_POSITION)
+        motor.set_position(right)
         time.sleep(1)
 
     # If the arm is at the right of the robot, move it to the left side of the robot    
     elif(motor.get_position() > 0) :
-        motor.set_position(LEFT_POSITION)
+        motor.set_position(left)
         time.sleep(1)
 
     # If the arm is at the left of the robot, move it to the right side of the robot  
     else :
-        motor.set_position(RIGHT_POSITION)
+        motor.set_position(right)
         time.sleep(1)
 
 
@@ -174,7 +176,7 @@ def move_motor_pendulum():
 
     global stopped_color_detection, stopped_motor_color_sensor
 
-    move_motor(motor_color_sensor)
+    move_motor(motor_color_sensor, LEFT_POSITION, RIGHT_POSITION)
 
     # The scanning is done and no color has been detected, so stop the arm and global variable stopped_motor_color_sensor should be set to True
     motor_color_sensor.set_dps(0)
@@ -193,7 +195,7 @@ def move_motor_block():
 
     print('System is Ready!')
     
-    move_motor(motor_block)
+    move_motor(motor_color_sensor, LEFT_POSITION_2, RIGHT_POSITION_2)
 
     motor_block.set_dps(0)
     stopped_motor_block = True   
