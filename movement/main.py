@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # counters    
     delivery_counter = 0
     room_counter = 0
-
+        
     for i in range(len(INTERSECTION_PATTERN)):
 
         # move until next intersection
@@ -44,6 +44,10 @@ if __name__ == "__main__":
             
             # update room number
             room_counter += 1
+
+            if room_counter == 4:
+                return_home(room_counter)
+                break
 
             # go back to storage room if 2 deliveries completed
             if delivery_counter == 2:
