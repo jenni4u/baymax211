@@ -1,6 +1,10 @@
 from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep
 import math
 import time
+
+# Global emergency stop flag (shared with main)
+emergency_stop = False
+
 # We follow the left edge of the line 
 
 
@@ -9,7 +13,7 @@ BASE_SPEED = -230       # default wheel DPS
 BACK_SPEED = -100
 TURN_SPEED = -120
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
-TARGET = 25          # Color sensor is halfway between black and white, at the edge of a line
+TARGET = 30          # Color sensor is halfway between black and white, at the edge of a line
 TARGET_THRESHOLD = 5   # acceptable error range from target
 MAX_CORRECTION = 100
 BLACK_THRESHOLD = 10   # color sensor is placed at exact middle of line
@@ -70,6 +74,11 @@ def move_forward(distance,
                  right_wheel: Motor= RIGHT_WHEEL,
                  speed = BASE_SPEED) -> None:
     """Move the robot forward by a certain distance."""
+    global emergency_stop
+    
+    if emergency_stop:
+        return
+        
     # set motor limits (use absolute DPS for limits)
     if distance < 0:
         speed = BACK_SPEED
@@ -87,7 +96,16 @@ def move_forward(distance,
         # reverse: rotate wheels in opposite direction
         left_wheel.set_position_relative(degrees)
         right_wheel.set_position_relative(degrees)
-    busy_sleep(1)
+    
+    # Wait for motors to complete movement while checking for emergency stop
+    busy_sleep(0.1)  # Small delay for motors to start moving
+    while (left_wheel.is_moving() or right_wheel.is_moving()) and not emergency_stop:
+        busy_sleep(0.05)
+    
+    # Stop motors if emergency stop was triggered
+    if emergency_stop:
+        left_wheel.set_dps(0)
+        right_wheel.set_dps(0)
 
 
 def line_follower_distance(distance: float,
@@ -106,6 +124,8 @@ def line_follower_distance(distance: float,
         distance: Distance to move in cm (positive for forward, negative for backward).
         speed: Speed of the motors.
     """
+    global emergency_stop
+    
     forward = False
     if distance > 0:
         forward = True
@@ -128,7 +148,7 @@ def line_follower_distance(distance: float,
 
     if forward:
         #-1800 > -2400
-        while (left_motor.get_encoder() + right_motor.get_encoder())/2 > degrees_to_achieve: #signs are flipped due to degrees being negative
+        while (left_motor.get_encoder() + right_motor.get_encoder())/2 > degrees_to_achieve and not emergency_stop: #signs are flipped due to degrees being negative
             # print("moving straight")
             # print("Degrees left to achieve: " + str(((left_motor.get_encoder() + right_motor.get_encoder())/2 - degrees_to_achieve)))
             curr_val: float = get_reflected_light_reading(color_sensor, 3) 
@@ -145,7 +165,7 @@ def line_follower_distance(distance: float,
         busy_sleep(2)
     else:
         #-1800 < -1200
-        while (left_motor.get_encoder() + right_motor.get_encoder())/2 < degrees_to_achieve: 
+        while (left_motor.get_encoder() + right_motor.get_encoder())/2 < degrees_to_achieve and not emergency_stop: 
             # print("moving straight backwards")
             # print("Degrees left to achieve: " + str((degrees_to_achieve - (left_motor.get_encoder() + right_motor.get_encoder())/2)))
             curr_val: float = get_reflected_light_reading(color_sensor, 3) 
@@ -179,6 +199,8 @@ def line_follower(direction: bool = True,
         target: Target reflected light value.
         base_speed: Base speed of the motors.
     """
+    global emergency_stop
+    
     if not direction:
         base_speed = BACK_SPEED
         kp = KP -0.2
@@ -189,7 +211,7 @@ def line_follower(direction: bool = True,
     curr_val: float = get_reflected_light_reading(color_sensor, 3)
     #print("curr_val" + str(curr_val))
     
-    while curr_val > BLACK_THRESHOLD:
+    while curr_val > BLACK_THRESHOLD and not emergency_stop:
         # Get current reflected light value
         curr_val: float = get_reflected_light_reading(color_sensor, 3)
         #print("curr_val" + str(curr_val))
@@ -209,7 +231,7 @@ def line_follower(direction: bool = True,
         curr_val: float = get_reflected_light_reading(color_sensor, 3)
         # print("curr_val" + str(curr_val))
 
-
+    # Stop motors
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 
@@ -227,14 +249,20 @@ def turn_room(left_motor: Motor = LEFT_WHEEL,
         radius: Radius of the wheels (cm).
         rps: Rotations per second for the motors.
     """
+    global emergency_stop
+    
     # move forward to position robot for turn
     line_follower_distance(17.5)
-    time_needed = (92 * diameter_axis) / (2 * abs(dps) * radius)
+    
+    if emergency_stop:
+        return
+        
+    time_needed = (93 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
-    while time.time() < stop_time:
-        continue
+    while time.time() < stop_time and not emergency_stop:
+        busy_sleep(0.01)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
     busy_sleep(1)
@@ -244,12 +272,17 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
                         color_sensor: EV3ColorSensor = COLOR_SENSOR,
                         dps: int = TURN_SPEED,
                         ) -> float:
+    global emergency_stop
+    
     line_follower_distance(17.5, KP)
+    
+    if emergency_stop:
+        return
+        
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
-    while color_sensor.get_red() > BLACK_THRESHOLD:
+    while color_sensor.get_red() > BLACK_THRESHOLD and not emergency_stop:
         busy_sleep(0.01)
-        continue
     left_motor.set_dps(0)
     right_motor.set_dps(0)
     
@@ -269,11 +302,17 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
         radius: Radius of the wheels (cm).
         rps: Rotations per second for the motors.
     """
-    time_needed = (89 * diameter_axis) / (2 * abs(dps) * radius)
+    global emergency_stop
+    
+    if emergency_stop:
+        return
+        
+    time_needed = (87 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
-    while time.time() < stop_time:
-        left_motor.set_dps(dps)
-        right_motor.set_dps(-dps)
+    left_motor.set_dps(dps)
+    right_motor.set_dps(-dps)
+    while time.time() < stop_time and not emergency_stop:
+        busy_sleep(0.01)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 
@@ -287,6 +326,11 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     """
     Turn the robot to the left until the color sensor detects the line again.
     """
+    global emergency_stop
+    
+    if emergency_stop:
+        return
+        
     #TODO: measure proper distance to move forward before turning
     # the axis of the wheels should be lined up with the grey line of the tile
     move_forward(3)
@@ -325,9 +369,14 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     outer_wheel.set_dps(dps=outer_dps)
     print("Getting out of black")
     busy_sleep(3) # wait for robot to move off the line
+    
+    if emergency_stop:
+        stop()
+        return
+        
     turning = True
     print("Starting smooth turn")
-    while turning:
+    while turning and not emergency_stop:
         curr_val = get_reflected_light_reading(color_sensor, 3)
         
         # stop turning once target point has been reached
@@ -335,7 +384,7 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
         if curr_val <= BLACK_THRESHOLD: 
             print("Target spot found during smooth turn")
             # continue turning until we find target spot again
-            while curr_val < TARGET:
+            while curr_val < TARGET and not emergency_stop:
                 curr_val = get_reflected_light_reading(color_sensor, 3)
                 # print(curr_val)
                      
