@@ -1,4 +1,4 @@
-from utils.brick import Motor, BP, wait_ready_sensors
+from utils.brick import EV3ColorSensor, Motor, BP, wait_ready_sensors
 import math
 import time
 from dd.pendulum_mvt import PendulumScanner
@@ -221,5 +221,11 @@ class RobotScannerOfRoom:
 
 
 #------------- RUNNING MAIN -------------#
-#if __name__ == "__main__":
-    #scan_room() 
+if __name__ == "__main__":
+    motor_color_sensor = Motor("A")
+    motor_block = Motor("D")
+    COLOR_SENSOR = EV3ColorSensor(3) 
+    LEFT_WHEEL = Motor("B")
+    RIGHT_WHEEL = Motor("C")
+    scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
+    scanner.scan_room(0)
