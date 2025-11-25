@@ -4,7 +4,7 @@ def move_to_storage_room():
     """
     Moves robot from intersection to storage room.
     """
-    lf.line_follower_distance(15)
+    lf.line_follower_distance(15, kp = -1.5)
     lf.move_forward(22)
 
 def return_home(room: int):
@@ -14,8 +14,11 @@ def return_home(room: int):
 
     if room == 4 or room == 2:
         # back up
+        print("back up 1")
         lf.line_follower(False)
-        lf.move_forward(-2)
+        print("back up 2")
+        lf.move_forward(-3)
+        print("back up 3")
         lf.line_follower(False)
 
         # turn towards storage room
