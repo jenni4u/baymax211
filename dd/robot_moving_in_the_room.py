@@ -1,7 +1,7 @@
 from utils.brick import EV3ColorSensor, Motor, BP, wait_ready_sensors
 import math
 import time
-from dd.pendulum_mvt import PendulumScanner
+from pendulum_mvt import PendulumScanner
 
 
 class RobotScannerOfRoom:
@@ -42,6 +42,11 @@ class RobotScannerOfRoom:
 
         # Create the pendulum object that scans the width
         self.scanner = PendulumScanner(motor_color_sensor,motor_block,color_sensor)
+        
+        motor_block.reset_encoder()
+        motor_color_sensor.reset_encoder()
+        LEFT_WHEEL.reset_encoder()
+        RIGHT_WHEEL.reset_encoder()
 
 
     #-------- MOVE THE ROBOT ------------#
@@ -171,8 +176,8 @@ class RobotScannerOfRoom:
         
         try:
             # The robot enters at 9 cm from the orange door, so make it backup to the middle of the orange dorr
-            self.move_robot(-(self.DISTANCE_ENTER - self.DISTANCE_PER_SCANNING), 250)
-            time.sleep(3)
+            self.move_robot(-(self.DISTANCE_ENTER - self.DISTANCE_PER_SCANNING), 200)
+            time.sleep(2)
             
             
             while True:
@@ -195,10 +200,10 @@ class RobotScannerOfRoom:
                 if color == "red":
                     self.RIGHT_WHEEL.set_dps(0)
                     self.LEFT_WHEEL.set_dps(0)
-                    time.sleep(1.5)
+                    time.sleep(0.3)
                     #reset both arms to position 0 at the same time
                     self.scanner.reset_both_motors_to_initial_position()
-                    time.sleep(1)
+                    time.sleep(0.2)
                     # Advance the robot to the entrance position. If red was detected, it should have be from a distance of 3 DISTANCE_PER_SCANNING from the extremity of the room
                     self.move_robot(self.DISTANCE_ENTER - self.DISTANCE_PER_SCANNING*3, 150)
                     
@@ -228,4 +233,4 @@ if __name__ == "__main__":
     LEFT_WHEEL = Motor("B")
     RIGHT_WHEEL = Motor("C")
     scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
-    scanner.scan_room(0)
+    scanner.scan_room(1)
