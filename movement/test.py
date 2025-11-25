@@ -8,4 +8,10 @@ def test(t):
     print("return home")
     rh.return_home(t)
         
-test(4)
+#test(4)
+print("line follower")
+lf.line_follower()
+print("smooth turn")
+lf.smooth_turn()
+print("line follower distance 10")
+lf.line_follower_distance(10)

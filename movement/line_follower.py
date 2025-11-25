@@ -9,7 +9,7 @@ BASE_SPEED = -230       # default wheel DPS
 BACK_SPEED = -100
 TURN_SPEED = -120
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
-TARGET = 22          # Color sensor is halfway between black and white, at the edge of a line
+TARGET = 25          # Color sensor is halfway between black and white, at the edge of a line
 TARGET_THRESHOLD = 5   # acceptable error range from target
 MAX_CORRECTION = 100
 BLACK_THRESHOLD = 10   # color sensor is placed at exact middle of line
@@ -323,14 +323,17 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     # set wheel dps limits for turn
     inner_wheel.set_dps(dps=inner_dps)
     outer_wheel.set_dps(dps=outer_dps)
+    print("Getting out of black")
     busy_sleep(3) # wait for robot to move off the line
     turning = True
+    print("Starting smooth turn")
     while turning:
         curr_val = get_reflected_light_reading(color_sensor, 3)
         
         # stop turning once target point has been reached
         # kept flexible
         if curr_val <= BLACK_THRESHOLD: 
+            print("Target spot found during smooth turn")
             # continue turning until we find target spot again
             while curr_val < TARGET:
                 curr_val = get_reflected_light_reading(color_sensor, 3)
@@ -338,7 +341,7 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
                      
 
             turning = False
-
+            print("Ending smooth turn")
             stop()
             print(curr_val)
         busy_sleep(0.01)
