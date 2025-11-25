@@ -1,9 +1,8 @@
 from utils.brick import Motor, BP, wait_ready_sensors, EV3ColorSensor
-from brickpi3 import SensorError
-from color_detection_algorithm import ColorDetectionAlgorithm
+from dd.color_detection_algorithm import ColorDetectionAlgorithm
 import time
 import threading
-import sounds_utils
+import dd.sounds_utils as sounds_utils
 
 class PendulumScanner:
     #----------- CONSTANTS -----------#

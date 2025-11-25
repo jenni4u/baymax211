@@ -1,7 +1,7 @@
 from utils.brick import Motor, BP, wait_ready_sensors
 import math
 import time
-from pendulum_mvt import PendulumScanner
+from dd.pendulum_mvt import PendulumScanner
 
 
 class RobotScannerOfRoom:
