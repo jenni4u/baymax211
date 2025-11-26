@@ -41,30 +41,15 @@ class RobotScannerOfRoom:
         self.COLOR_SENSOR = color_sensor
 
         # Create the pendulum object that scans the width
+        self.scanner = PendulumScanner(motor_color_sensor,motor_block,color_sensor)
         
         motor_block.reset_encoder()
         motor_color_sensor.reset_encoder()
         LEFT_WHEEL.reset_encoder()
         RIGHT_WHEEL.reset_encoder()
 
-        self.emergency_stop = False
-        self.scanner = PendulumScanner(motor_color_sensor,motor_block,color_sensor)
-
 
     #-------- MOVE THE ROBOT ------------#
-
-    def verify_emergency_stop(self):
-        """
-        Function that checks at every 0.01 second the emergency_stop.
-        If the emergency stop is activated, stop the wheels
-        """
-        
-        # Check at every 0.01 seconds if emergency_stop is true
-        while not (self.LEFT_WHEEL.is_stopped() and self.RIGHT_WHEEL.is_stopped()):
-            if self.emergency_stop:
-                self.stop()
-                return
-            time.sleep(0.01)
 
 
     def move_robot(self, distance, dps):
@@ -77,10 +62,6 @@ class RobotScannerOfRoom:
             dps (int): The speed at which the robot must move
         """
 
-        if self.emergency_stop:
-            self.stop()
-            return
-
         # Set the speed of the wheels    
         self.RIGHT_WHEEL.set_dps(dps)
         self.LEFT_WHEEL.set_dps(dps)
@@ -88,7 +69,6 @@ class RobotScannerOfRoom:
         # Rotate wheels to advance a certain distance
         self.LEFT_WHEEL.set_position_relative(-distance * self.DISTTODEG)
         self.RIGHT_WHEEL.set_position_relative(-distance * self.DISTTODEG)
-        self.verify_emergency_stop()
 
 
 
@@ -102,9 +82,6 @@ class RobotScannerOfRoom:
             total_distance (float): The total distance the robot travelled in the room starting from the center of the orange door (color sensor)
         """
             
-        if self.emergency_stop:
-            self.stop()
-            return
 
         # First stop the movement of the wheels once the extremity of the room was reached
         self.RIGHT_WHEEL.set_dps(0)
@@ -143,31 +120,25 @@ class RobotScannerOfRoom:
 
         # Determine the new positon of the color sensor arm to allow the dropping
         drop_angle = 0
-        initial_color_angle = self.motor_color_sensor.get_position() #storing the initial position of the color arm
+        initial_color_angle = self.scanner.motor_color_sensor.get_position() #storing the initial position of the color arm
         if initial_color_angle < 0:
             drop_angle = initial_color_angle + angle_movement 
         else:
             drop_angle = initial_color_angle - angle_movement
 
         #reducing the speed of the motor to make it smoother and set the new position of the color arm
-        if self.emergency_stop:
-            return
-        self.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100)
-        self.motor_color_sensor.set_position(drop_angle)
-        self.scanner.verify_emergency_stop(self.motor_color_sensor)
+        self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100)
+        self.scanner.motor_color_sensor.set_position(drop_angle)
         time.sleep(2.5)      
 
         #stop the arm
-        self.motor_color_sensor.set_dps(0)
+        self.scanner.motor_color_sensor.set_dps(0)
 
         #move the arm back to its exact initial angle
-        if self.emergency_stop:
-            return
-        self.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100) 
-        self.motor_color_sensor.set_position(initial_color_angle)
-        self.scanner.verify_emergency_stop(self.motor_color_sensor)
+        self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100) 
+        self.scanner.motor_color_sensor.set_position(initial_color_angle)
         time.sleep(1.5)
-        self.motor_color_sensor.set_dps(0)
+        self.scanner.motor_color_sensor.set_dps(0)
 
         #reset both arms to position 0 at the same time
         self.scanner.reset_both_motors_to_initial_position()
@@ -209,7 +180,7 @@ class RobotScannerOfRoom:
             time.sleep(2)
             
             
-            while not self.emergency_stop:
+            while True:
                 # If the robot travelled the whole room, it finished scanning it so it needs to go back to the robot's entrance position
                 if (total_distance>= self.MAX_ROOM_DISTANCE):
                     self.move_back_after_scanning(total_distance)
@@ -247,21 +218,11 @@ class RobotScannerOfRoom:
                     self.package_delivery(total_distance, delivery_counter)
                     total_distance = 0 # Once done moving back, set the total_distance to 0
                     return True # Green detected so block dropped -> True
-        
+
 
         except BaseException as error:
             print("Error during scan_room:", error)
             BP.reset_all()  
-     
-    def stop(self):
-        """
-        Function that stops the robot
-        """
-
-        self.RIGHT_WHEEL.set_dps(0)
-        self.LEFT_WHEEL.set_dps(0)
-        self.motor_block.set_dps(0)
-        self.motor_color_sensor(0)
 
 
 #------------- RUNNING MAIN -------------#
