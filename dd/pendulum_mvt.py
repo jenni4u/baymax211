@@ -45,7 +45,7 @@ class PendulumScanner:
         self.stopped_motor_color_sensor = False # Boolean that verifies that the color sensor arm is moving
 
 
-
+        self.emergency_stop = False
 
     #---------- COLOR CLASSIFICATION ----------#
 
@@ -89,7 +89,7 @@ class PendulumScanner:
         count_red = 0
 
 
-        while not self.stopped_color_detection and not self.stopped_motor_block and not self.stopped_motor_color_sensor:
+        while not self.stopped_color_detection and not self.stopped_motor_block and not self.stopped_motor_color_sensor and not self.emergency_stop:
             try:
 
                 # Read the values and ensure they are valid numbers
@@ -147,20 +147,37 @@ class PendulumScanner:
 
     #---------- ARMS MOVEMENT ----------#
 
+    def verify_emergency_stop(self, motor):
+        """
+        Function that checks at every 0.01 second the emergency_stop.
+        If the emergency stop is activated, stop the motor
+
+        Args:
+            motor (Motor): The robot's arm that moves
+        """
+        
+        # Check at every 0.01 seconds if emergency_stop is true
+        while not motor.is_stopped():
+            if self.emergency_stop:
+                self.stop_the_arms_movement()
+                return
+            time.sleep(0.01)
+
+
     def move_motor(self, motor, left, right):
-
-            
         """
-            Function that moves the arm in a pendulum movement to scan the width of the room.
-            Runs only if the color sensor detection has not been stopped yet 
-            (i.e. a color was detected or the robot finished scanning the room)
+        Function that moves the arm in a pendulum movement to scan the width of the room.
+        Runs only if the color sensor detection has not been stopped yet 
+        (i.e. a color was detected or the robot finished scanning the room)
 
-            Args:
-                motor (Motor): The robot's arm to move
-                left: the limit angle it turns when going to the left
-                right: the limit angle it turns when going to the right
+        Args:
+            motor (Motor): The robot's arm to move
+            left: the limit angle it turns when going to the left
+            right: the limit angle it turns when going to the right
         """
-    
+        if self.emergency_stop:
+            self.stop_the_arms_movement()
+            return
 
         print('System is Ready!')
 
@@ -175,29 +192,36 @@ class PendulumScanner:
         # To scan the room's width, it needs to scan left, then right    
         elif (motor.get_position()==0):
             motor.set_position(left)
+            self.verify_emergency_stop(motor)
             time.sleep(1)
             motor.set_position(right)
+            self.verify_emergency_stop(motor)
             time.sleep(1)
 
         # If the arm is at the right of the robot, move it to the left side of the robot    
         elif(motor.get_position() > 0) :
             motor.set_position(left)
+            self.verify_emergency_stop(motor)
             time.sleep(1)
 
         # If the arm is at the left of the robot, move it to the right side of the robot  
         else :
             motor.set_position(right)
+            self.verify_emergency_stop(motor)
             time.sleep(1)
 
 
 
-    def move_motor_pendulum(self): 
+    def move_motor_color_sensor(self): 
 
         """
         Function that moves the color sensor arm to scan the width of the room.
         Once the scanning is done, it should be stopped from moving
         """
 
+        if self.emergency_stop:
+            self.stop_the_arms_movement()
+            return
 
         self.move_motor(self.motor_color_sensor, self.LEFT_POSITION, self.RIGHT_POSITION)
 
@@ -213,6 +237,10 @@ class PendulumScanner:
             Once the scanning is done, it should be stopped from moving
         """
 
+        if self.emergency_stop:
+            self.stop_the_arms_movement()
+            return
+        
         print('System is Ready!')
         
         self.move_motor(self.motor_block, self.LEFT_POSITION_2, self.RIGHT_POSITION_2)
@@ -243,7 +271,7 @@ class PendulumScanner:
 
         try:
             color_thread = threading.Thread(target=self.color_sample)
-            move_pendulum_thread = threading.Thread(target=self.move_motor_pendulum)
+            move_pendulum_thread = threading.Thread(target=self.move_motor_color_sensor)
             move_block_thread = threading.Thread(target=self.move_motor_block)
 
             color_thread.start()
@@ -272,9 +300,13 @@ class PendulumScanner:
         Args:
             motor (Motor): The robot's arm to set back to position 0
         """
-
+        if self.emergency_stop:
+            self.stop_the_arms_movement()
+            return
+        
         motor.set_dps(self.MOTOR_DPS)
         motor.set_position(self.INITIAL_POSITION)
+        self.verify_emergency_stop(motor)
         # Wait until motor reaches position
         time.sleep(1)
         motor.set_dps(0)
@@ -285,7 +317,10 @@ class PendulumScanner:
         """
         Function that resets the position of the robot's arms at the same time to initial position using threading
         """
-        
+        if self.emergency_stop:
+            self.stop_the_arms_movement()
+            return
+    
         thread_color_arm = threading.Thread(target=self.reset_motor_to_initial_position, args=(self.motor_color_sensor,))
         thread_block_arm = threading.Thread(target=self.reset_motor_to_initial_position, args=(self.motor_block,))
         thread_color_arm.start()
