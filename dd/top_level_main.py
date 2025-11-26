@@ -41,8 +41,9 @@ def emergency_stop_monitor():
                 scanner_room.stop()
                 scanner_room.scanner.stop_the_arms_movement()
                 lf.stop()
+                BP.reset_all()
                 #reset_brick()
-                break
+                sys.exit()
             time.sleep(0.05)  # Check every 50ms
         except Exception as e:
             print(f"Error in emergency stop monitor: {e}")
