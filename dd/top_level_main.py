@@ -12,9 +12,11 @@ scanner_motor = Motor("A")  # Assuming motor A is for the scanner
 drop_motor = Motor("D")     # Assuming motor D is for dropping blocks
 color_sensor = EV3ColorSensor(3)
 touch_sensor = TouchSensor(4)  
+
+scanner_room = RobotScannerOfRoom(scanner_motor, drop_motor, color_sensor, right_motor, left_motor)
+
 wait_ready_sensors(True)
 
-emergency_stop = False
 
 # INTERSECTION PATTERN
 ROOM = 0     # Meeting Room
@@ -28,16 +30,18 @@ INTERSECTION_PATTERN = [ROOM, ST_ROOM, ROOM,
 
 def emergency_stop_monitor():
     """Monitor touch sensor for emergency stop signal."""
-    global emergency_stop
     print("Emergency stop monitor started. Press touch sensor to stop.")
-    while not emergency_stop:
+    while not lf.emergency_stop:
         try:
             if touch_sensor.is_pressed():
                 print("\n*** EMERGENCY STOP ACTIVATED ***")
-#                 emergency_stop = True
-#                 lf.stop()
-#                 reset_brick()
-                BP.reset_all()
+                lf.emergency_stop = True
+                scanner_room.emergency_stop = True
+                scanner_room.scanner.emergency_stop = True
+                scanner_room.stop()
+                scanner_room.scanner.stop_the_arms_movement()
+                lf.stop()
+                #reset_brick()
                 break
             time.sleep(0.05)  # Check every 50ms
         except Exception as e:
@@ -53,12 +57,11 @@ if __name__ == "__main__":
     delivery_counter = 0
     room_counter = 0
 
-    scanner = RobotScannerOfRoom(scanner_motor, drop_motor, color_sensor, right_motor, left_motor)
-
+    
 
     for i in range(len(INTERSECTION_PATTERN)):
         
-        if emergency_stop:
+        if lf.emergency_stop:
                 print("Operation cancelled due to emergency stop.")
                 break
             
@@ -67,7 +70,7 @@ if __name__ == "__main__":
         
         # move until next intersection
         lf.line_follower(left_motor=left_motor, right_motor=right_motor, color_sensor=color_sensor)
-        if emergency_stop:
+        if lf.emergency_stop:
                 break
             
             
@@ -77,13 +80,13 @@ if __name__ == "__main__":
             # enter and scan room
             lf.turn_room(left_motor, right_motor)
             
-            if emergency_stop:
+            if lf.emergency_stop:
                     break
                 
             color_sensor.set_mode("component")
             wait_ready_sensors(True)
             
-            if scanner.scan_room(delivery_counter):
+            if scanner_room.scan_room(delivery_counter):
                 print("did the scanning")
                 delivery_counter += 1
                 print(f"Delivery successful! Total deliveries: {delivery_counter}")
@@ -92,7 +95,7 @@ if __name__ == "__main__":
             wait_ready_sensors(True)
             
             lf.undo_turn_room(left_motor, right_motor)
-            if emergency_stop:
+            if lf.emergency_stop:
                     break
             
             # update room number
@@ -107,7 +110,7 @@ if __name__ == "__main__":
         elif INTERSECTION_PATTERN[i] == CORNER:
             print("At new edge, smooth turning left")
             lf.smooth_turn(left_motor, right_motor)
-            if emergency_stop:
+            if lf.emergency_stop:
                     break
 
 
