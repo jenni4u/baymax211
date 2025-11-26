@@ -113,7 +113,7 @@ class RobotScannerOfRoom:
         # If the deliver_count is 0 (no block dropped yet), the angle is 30. Else, the robot must move of 50
         angle_movement = 0
         if (delivery_counter == 0):
-            angle_movement = 30
+            angle_movement = 27
         else:
             angle_movement = 50
 
