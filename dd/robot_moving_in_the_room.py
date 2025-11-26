@@ -48,10 +48,15 @@ class RobotScannerOfRoom:
         LEFT_WHEEL.reset_encoder()
         RIGHT_WHEEL.reset_encoder()
 
+        self.emergency_stop = False
+
 
     #-------- MOVE THE ROBOT ------------#
 
-
+    def stop(self):
+        self.RIGHT_WHEEL.set_dps(0)
+        self.LEFT_WHEEL.set_dps(0)
+        
     def move_robot(self, distance, dps):
 
         """
@@ -61,6 +66,10 @@ class RobotScannerOfRoom:
             distance (float): The distance by which the robot must move
             dps (int): The speed at which the robot must move
         """
+        
+        if (self.emergency_stop):
+            self.stop()
+            return
 
         # Set the speed of the wheels    
         self.RIGHT_WHEEL.set_dps(dps)
@@ -69,6 +78,10 @@ class RobotScannerOfRoom:
         # Rotate wheels to advance a certain distance
         self.LEFT_WHEEL.set_position_relative(-distance * self.DISTTODEG)
         self.RIGHT_WHEEL.set_position_relative(-distance * self.DISTTODEG)
+
+        if (self.emergency_stop):
+            self.stop()
+            return
 
 
 
@@ -82,7 +95,10 @@ class RobotScannerOfRoom:
             total_distance (float): The total distance the robot travelled in the room starting from the center of the orange door (color sensor)
         """
             
-
+        if (self.emergency_stop):
+            self.stop()
+            return
+        
         # First stop the movement of the wheels once the extremity of the room was reached
         self.RIGHT_WHEEL.set_dps(0)
         self.LEFT_WHEEL.set_dps(0)
@@ -95,6 +111,10 @@ class RobotScannerOfRoom:
         # The total_distance doesn't include half of the orange door
         # Since the robot must be placed at 9 cm form the orange door, include this DISTANCE_PER_SCANNING IN THE CALCULATION
         self.move_robot(-(total_distance + self.DISTANCE_PER_SCANNING - self.DISTANCE_ENTER), 250)
+
+        if (self.emergency_stop):
+            self.stop()
+            return
         
 
 
@@ -128,15 +148,32 @@ class RobotScannerOfRoom:
 
         #reducing the speed of the motor to make it smoother and set the new position of the color arm
         self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100)
+
+        if (self.emergency_stop):
+            self.stop()
+            return
         self.scanner.motor_color_sensor.set_position(drop_angle)
+        if (self.emergency_stop):
+            self.stop()
+            return
+        
+
         time.sleep(2.5)      
 
         #stop the arm
         self.scanner.motor_color_sensor.set_dps(0)
 
         #move the arm back to its exact initial angle
-        self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100) 
+        self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100)
+
+        if (self.emergency_stop):
+            self.stop()
+            return 
         self.scanner.motor_color_sensor.set_position(initial_color_angle)
+        if (self.emergency_stop):
+            self.stop()
+            return
+        
         time.sleep(1.5)
         self.scanner.motor_color_sensor.set_dps(0)
 
