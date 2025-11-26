@@ -82,30 +82,22 @@ def move_forward(distance,
     # set motor limits (use absolute DPS for limits)
     if distance < 0:
         speed = BACK_SPEED
-    right_wheel.set_limits(100, dps=abs(speed))
-    left_wheel.set_limits(100, dps=abs(speed))
 
-    # convert absolute distance (cm) to wheel degrees
+    # calculate time needed to travel distance
     degrees = abs(distance) * DISTTODEG
+    t = degrees / abs(speed)  
 
-    if distance >= 0:
-        # forward: use same sign convention as previous implementation
-        left_wheel.set_position_relative(-degrees)
-        right_wheel.set_position_relative(-degrees)
-    else:
-        # reverse: rotate wheels in opposite direction
-        left_wheel.set_position_relative(degrees)
-        right_wheel.set_position_relative(degrees)
+    now = time.time()
+    end = now + t
+
+    # move motors until time elapses
+    left_wheel.set_dps(speed)
+    right_wheel.set_dps(speed)
+    while time.time() < end and not emergency_stop:
+        continue
     
-    # Wait for motors to complete movement while checking for emergency stop
-    busy_sleep(0.1)  # Small delay for motors to start moving
-    while (left_wheel.is_moving() or right_wheel.is_moving()) and not emergency_stop:
-        busy_sleep(0.05)
-    
-    # Stop motors if emergency stop was triggered
-    if emergency_stop:
-        left_wheel.set_dps(0)
-        right_wheel.set_dps(0)
+    # stop if emergency stop triggered or time elapsed
+    stop(left_wheel, right_wheel)
 
 
 def line_follower_distance(distance: float,
