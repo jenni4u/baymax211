@@ -1,8 +1,8 @@
 from utils.brick import Motor, BP, wait_ready_sensors, EV3ColorSensor
-from dd.color_detection_algorithm import ColorDetectionAlgorithm
+from color_detection_algorithm import ColorDetectionAlgorithm
 import time
 import threading
-import dd.sounds_utils as sounds_utils
+import sounds_utils as sounds_utils
 
 class PendulumScanner:
     #----------- CONSTANTS -----------#
@@ -215,7 +215,7 @@ class PendulumScanner:
 
         print('System is Ready!')
         
-        self.move_motor(self.motor_color_sensor, self.LEFT_POSITION_2, self.RIGHT_POSITION_2)
+        self.move_motor(self.motor_block, self.LEFT_POSITION_2, self.RIGHT_POSITION_2)
 
         self.motor_block.set_dps(0)
         self.stopped_motor_block = True   
@@ -296,7 +296,10 @@ class PendulumScanner:
         thread_block_arm.join()
 
 
-#------------- RUNNING MAIN -------------#
-#if __name__ == "__main__":
-    # scanner = PendulumScanner()
-    #scanner.main_pendulum()
+#------------- RUNNING MAIN -------------#i
+if __name__ == "__main__":
+    motor_color_sensor = Motor("A")
+    motor_block = Motor("D")
+    COLOR_SENSOR = EV3ColorSensor(3) 
+    scanner = PendulumScanner(motor_color_sensor, motor_block, COLOR_SENSOR)
+    scanner.main_pendulum()
