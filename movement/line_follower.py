@@ -12,8 +12,8 @@ emergency_stop = False
 BASE_SPEED = -230       # default wheel DPS
 BACK_SPEED = -100
 TURN_SPEED = -120
-KP = -1.3               # adjusts sharpness of turns, the less the smoother
-TARGET = 30          # Color sensor is halfway between black and white, at the edge of a line
+KP = -1               # adjusts sharpness of turns, the less the smoother
+TARGET = 20          # Color sensor is halfway between black and white, at the edge of a line
 TARGET_THRESHOLD = 5   # acceptable error range from target
 MAX_CORRECTION = 100
 BLACK_THRESHOLD = 10   # color sensor is placed at exact middle of line
@@ -249,7 +249,7 @@ def turn_room(left_motor: Motor = LEFT_WHEEL,
     if emergency_stop:
         return
         
-    time_needed = (93 * diameter_axis) / (2 * abs(dps) * radius)
+    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
@@ -299,7 +299,7 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
     if emergency_stop:
         return
         
-    time_needed = (87 * diameter_axis) / (2 * abs(dps) * radius)
+    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
     left_motor.set_dps(dps)
     right_motor.set_dps(-dps)
