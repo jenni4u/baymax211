@@ -198,7 +198,7 @@ class PendulumScanner:
         
         if (position == "right"):
             motor.set_position(self.get_pos(motor) + left)
-            position = left
+            #position = left
             time_wait = 0
             while (time_wait < 1):
                 if (self.emergency_stop):
