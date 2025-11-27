@@ -10,7 +10,7 @@ emergency_stop = False
 
 # CONTROL PARAMETERS
 BASE_SPEED = -200       # default wheel DPS
-BACK_SPEED = -100
+BACK_SPEED = 100
 TURN_SPEED = -150
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
 TARGET = 22          # Color sensor is halfway between black and white, at the edge of a line
