@@ -9,12 +9,12 @@ emergency_stop = False
 
 
 # CONTROL PARAMETERS
-BASE_SPEED = -230       # default wheel DPS
+BASE_SPEED = -200       # default wheel DPS
 BACK_SPEED = -100
-TURN_SPEED = -120
-KP = -1               # adjusts sharpness of turns, the less the smoother
-TARGET = 20          # Color sensor is halfway between black and white, at the edge of a line
-TARGET_THRESHOLD = 5   # acceptable error range from target
+TURN_SPEED = -150
+KP = -1.3               # adjusts sharpness of turns, the less the smoother
+TARGET = 22          # Color sensor is halfway between black and white, at the edge of a line
+TARGET_THRESHOLD = 8   # acceptable error range from target
 MAX_CORRECTION = 100
 BLACK_THRESHOLD = 10   # color sensor is placed at exact middle of line
 WHITE_THRESHOLD = 36    # color sensor is on full white
@@ -154,7 +154,6 @@ def line_follower_distance(distance: float,
             busy_sleep(0.03)               
         left_motor.set_dps(0)
         right_motor.set_dps(0)
-        busy_sleep(2)
     else:
         #-1800 < -1200
         while (left_motor.get_encoder() + right_motor.get_encoder())/2 < degrees_to_achieve and not emergency_stop: 
@@ -167,7 +166,6 @@ def line_follower_distance(distance: float,
             busy_sleep(0.03)               
         left_motor.set_dps(0)
         right_motor.set_dps(0)
-        busy_sleep(2)
 
 def line_follower(direction: bool = True,
                   left_motor: Motor = LEFT_WHEEL, 
@@ -229,9 +227,9 @@ def line_follower(direction: bool = True,
 
 def turn_room(left_motor: Motor = LEFT_WHEEL, 
                        right_motor: Motor = RIGHT_WHEEL, 
-                       diameter_axis: int = 12.00, 
+                       diameter_axis: int = 12.70, 
                        radius: float = DIAMETER/2, 
-                       dps: int = BASE_SPEED) -> None:
+                       dps: int = TURN_SPEED) -> None:
     """
     Turns the robot 90 degrees to the right on the spot.
     Args:
@@ -257,7 +255,6 @@ def turn_room(left_motor: Motor = LEFT_WHEEL,
         busy_sleep(0.01)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
-    busy_sleep(1)
 
 def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
                         right_motor: Motor = RIGHT_WHEEL,
@@ -273,8 +270,14 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
         
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
-    while color_sensor.get_red() > BLACK_THRESHOLD and not emergency_stop:
-        busy_sleep(0.01)
+    busy_sleep(1.5)
+    while color_sensor.get_red() > 12 and not emergency_stop:
+        busy_sleep(0.03)
+        dps += 20
+    while get_reflected_light_reading(color_sensor, 3) < (TARGET + 2) and not emergency_stop:
+        left_motor.set_dps(dps)
+        right_motor.set_dps(-dps)
+    
     left_motor.set_dps(0)
     right_motor.set_dps(0)
     
@@ -282,13 +285,12 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
 def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
                     right_motor: Motor = RIGHT_WHEEL, 
                     color_sensor: EV3ColorSensor = COLOR_SENSOR,
-                    dps: int = TURN_SPEED) -> None:
+                    dps: int = TURN_SPEED+10) -> None:
     """
     Turns the robot 90 degrees to the left on the spot (undo right turn).
     Args:
         left_motor: Motor instance for the left wheel.
         right_motor: Motor instance for the right wheel.
-        diameter_(axis: Distance between the two wheels (cm).
         radius: Radius of the wheels (cm).
         rps: Rotations per second for the motors.
     """
@@ -299,13 +301,18 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
         
     left_motor.set_dps(dps)
     right_motor.set_dps(-dps)
-    while get_reflected_light_reading(color_sensor, 3) > (TARGET + TARGET_THRESHOLD) and not emergency_stop:
-        busy_sleep(0.1)
+    busy_sleep(2)
+    print("now looking for black line")
+    while get_reflected_light_reading(color_sensor, 3) > (12) and not emergency_stop:
+        busy_sleep(0.03)
+
+    dps += 20
+    while get_reflected_light_reading(color_sensor, 3) < (TARGET + 2) and not emergency_stop:
+        left_motor.set_dps(-dps)
+        right_motor.set_dps(dps)
+    busy_sleep(0.01)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
-
-    
-
 
 
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
