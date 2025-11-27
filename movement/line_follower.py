@@ -282,9 +282,7 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
 def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
                     right_motor: Motor = RIGHT_WHEEL, 
                     color_sensor: EV3ColorSensor = COLOR_SENSOR,
-                    diameter_axis: int = 12.00, 
-                    radius: int = DIAMETER/2, 
-                    dps: int = BASE_SPEED) -> None:
+                    dps: int = TURN_SPEED) -> None:
     """
     Turns the robot 90 degrees to the left on the spot (undo right turn).
     Args:
@@ -299,12 +297,10 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
     if emergency_stop:
         return
         
-    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
-    stop_time = time.time() + time_needed
     left_motor.set_dps(dps)
     right_motor.set_dps(-dps)
-    while time.time() < stop_time and not emergency_stop:
-        busy_sleep(0.01)
+    while get_reflected_light_reading(color_sensor, 3) > (TARGET + TARGET_THRESHOLD) and not emergency_stop:
+        busy_sleep(0.1)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 
