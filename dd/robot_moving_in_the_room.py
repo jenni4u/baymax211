@@ -1,4 +1,4 @@
-from utils.brick import EV3ColorSensor, Motor, BP, wait_ready_sensors
+from utils.brick import EV3ColorSensor, Motor, BP, TouchSensor, wait_ready_sensors
 import math
 import time
 from pendulum_mvt import PendulumScanner
@@ -50,6 +50,17 @@ class RobotScannerOfRoom:
         self.emergency_stop = False
 
 
+    def trigger_emergency_stop(self):
+        """
+        Stops the movement upon external emergency signal (Touch Sensor).
+        Called ONLY by the external monitor thread.
+        """
+        print("!!! EMERGENCY STOP TRIGGERED !!!")
+        self.emergency_stop = True
+        
+        # Immediately issue non-blocking stop commands
+        self.motor_color_sensor.set_dps(0) 
+        self.motor_block.set_dps(0)
     #-------- MOVE THE ROBOT ------------#
 
     def stop(self):
@@ -315,5 +326,36 @@ if __name__ == "__main__":
     COLOR_SENSOR = EV3ColorSensor(3) 
     LEFT_WHEEL = Motor("B")
     RIGHT_WHEEL = Motor("C")
-    scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
-    scanner.scan_room(0)
+
+    # Initialize robot and global reference for the monitor thread
+    scanner_of_room = RobotScannerOfRoom(motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
+    TOUCH_SENSOR = TouchSensor(4) # Assuming port 4 for the touch sensor
+
+    # Monitor function (external to the class)
+    def touch_sensor_monitor(scanner):
+        while not scanner.emergency_stop:
+            try:
+                if TOUCH_SENSOR.is_pressed(): 
+                    scanner.trigger_emergency_stop()
+                    break 
+            except SensorError:
+                time.sleep(0.05)
+            time.sleep(0.05)
+            
+    try:
+        # Start the Touch Sensor monitoring thread
+        monitor_thread = threading.Thread(target=touch_sensor_monitor, args=(scanner_of_room,))
+        monitor_thread.start()
+        print("Touch sensor monitor started.")
+
+        # Run the mission
+        block_dropped = scanner_of_room.scan_room(0)
+        print(f"Mission finished. Block dropped: {block_dropped}")
+        
+        # Wait for monitor thread to clean up
+        monitor_thread.join()
+
+    except Exception as e:
+        print(f"Main execution error: {e}")
+    finally:
+        BP.reset_all()
