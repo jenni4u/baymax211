@@ -3,6 +3,7 @@ import math
 import time
 from pendulum_mvt import PendulumScanner
 from color_detection_algorithm import ColorDetectionAlgorithm
+import threading
 
 
 class RobotScannerOfRoom:
@@ -80,23 +81,24 @@ class RobotScannerOfRoom:
     
     def move_robot_orange_door(self,  dps):
 
+        count = 0
+       
+        self.RIGHT_WHEEL.set_dps(dps)
+        self.LEFT_WHEEL.set_dps(dps)
         
-        if (self.emergency_stop):
-            self.stop()
-            return
-        self.RIGHT_WHEEL.set_dps(-dps)
-        self.LEFT_WHEEL.set_dps(-dps)
-        if (self.emergency_stop):
-            self.stop()
-            return
-        while(self.get_detected_color!= "orange" and not self.emergency_stop):
-            time.sleep(0.05)
+        while(not self.emergency_stop):
+            color = self.get_detected_color()
+            if color == "orange":
+                count+= 1
+            else:
+                count = 0
+            if (count >=5):
+                break
+                
 
         self.stop()
 
-        if (self.emergency_stop):
-            self.stop()
-            return
+       
         
     def move_robot(self, distance, dps):
 
@@ -108,10 +110,7 @@ class RobotScannerOfRoom:
             dps (int): The speed at which the robot must move
         """
         
-        if (self.emergency_stop):
-            self.stop()
-            return
-
+     
         # Set the speed of the wheels    
         self.RIGHT_WHEEL.set_dps(dps)
         self.LEFT_WHEEL.set_dps(dps)
@@ -120,10 +119,7 @@ class RobotScannerOfRoom:
         self.LEFT_WHEEL.set_position_relative(-distance * self.DISTTODEG)
         self.RIGHT_WHEEL.set_position_relative(-distance * self.DISTTODEG)
 
-        if (self.emergency_stop):
-            self.stop()
-            return
-
+    
 
 
 
@@ -136,10 +132,7 @@ class RobotScannerOfRoom:
             total_distance (float): The total distance the robot travelled in the room starting from the center of the orange door (color sensor)
         """
             
-        if (self.emergency_stop):
-            self.stop()
-            return
-        
+       
         # First stop the movement of the wheels once the extremity of the room was reached
         self.RIGHT_WHEEL.set_dps(0)
         self.LEFT_WHEEL.set_dps(0)
@@ -153,9 +146,7 @@ class RobotScannerOfRoom:
         # Since the robot must be placed at 9 cm form the orange door, include this DISTANCE_PER_SCANNING IN THE CALCULATION
         self.move_robot(-(total_distance + self.DISTANCE_PER_SCANNING - self.DISTANCE_ENTER), 300)
 
-        if (self.emergency_stop):
-            self.stop()
-            return
+        
         
 
 
@@ -190,13 +181,9 @@ class RobotScannerOfRoom:
         #reducing the speed of the motor to make it smoother and set the new position of the color arm
         self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100)
 
-        if (self.emergency_stop):
-            self.stop()
-            return
+     
         self.scanner.motor_color_sensor.set_position(drop_angle)
-        if (self.emergency_stop):
-            self.stop()
-            return
+     
         
 
         time.sleep(2.5)      
@@ -207,13 +194,9 @@ class RobotScannerOfRoom:
         #move the arm back to its exact initial angle
         self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100)
 
-        if (self.emergency_stop):
-            self.stop()
-            return 
+     
         self.scanner.motor_color_sensor.set_position(initial_color_angle)
-        if (self.emergency_stop):
-            self.stop()
-            return
+      
         
         time.sleep(1.5)
         self.scanner.motor_color_sensor.set_dps(0)
@@ -337,6 +320,7 @@ if __name__ == "__main__":
             try:
                 if TOUCH_SENSOR.is_pressed(): 
                     scanner.trigger_emergency_stop()
+                    reset_brick()
                     break 
             except SensorError:
                 time.sleep(0.05)
