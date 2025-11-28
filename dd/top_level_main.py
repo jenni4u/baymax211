@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
         elif INTERSECTION_PATTERN[i] == ST_ROOM:
             print("At storage room, skipping for now")
-            lf.line_follower_distance(3)
+            lf.move_forward(3)
 
 
 

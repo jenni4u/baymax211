@@ -2,6 +2,7 @@ from utils.brick import EV3ColorSensor, Motor, BP, wait_ready_sensors
 import math
 import time
 from pendulum_mvt import PendulumScanner
+from color_detection_algorithm import ColorDetectionAlgorithm
 
 
 class RobotScannerOfRoom:
@@ -42,12 +43,10 @@ class RobotScannerOfRoom:
 
         # Create the pendulum object that scans the width
         self.scanner = PendulumScanner(motor_color_sensor,motor_block,color_sensor)
-        
-        motor_block.reset_encoder()
-        motor_color_sensor.reset_encoder()
-        LEFT_WHEEL.reset_encoder()
-        RIGHT_WHEEL.reset_encoder()
 
+        self.color_detection_algorithm = ColorDetectionAlgorithm()
+        
+    
         self.emergency_stop = False
 
 
@@ -56,6 +55,37 @@ class RobotScannerOfRoom:
     def stop(self):
         self.RIGHT_WHEEL.set_dps(0)
         self.LEFT_WHEEL.set_dps(0)
+
+    def get_detected_color(self):
+        color = None
+        values = self.COLOR_SENSOR.get_value()
+        if values:
+           
+            R, G, B, L = values
+            color = self.color_detection_algorithm.classify_the_color(R, G, B)
+
+        
+        return  color
+    
+    def move_robot_orange_door(self,  dps):
+
+        
+        if (self.emergency_stop):
+            self.stop()
+            return
+        self.RIGHT_WHEEL.set_dps(-dps)
+        self.LEFT_WHEEL.set_dps(-dps)
+        if (self.emergency_stop):
+            self.stop()
+            return
+        while(self.get_detected_color!= "orange" and not self.emergency_stop):
+            time.sleep(0.05)
+
+        self.stop()
+
+        if (self.emergency_stop):
+            self.stop()
+            return
         
     def move_robot(self, distance, dps):
 
@@ -110,7 +140,7 @@ class RobotScannerOfRoom:
         # Then move back the robot to its entrance position
         # The total_distance doesn't include half of the orange door
         # Since the robot must be placed at 9 cm form the orange door, include this DISTANCE_PER_SCANNING IN THE CALCULATION
-        self.move_robot(-(total_distance + self.DISTANCE_PER_SCANNING - self.DISTANCE_ENTER), 250)
+        self.move_robot(-(total_distance + self.DISTANCE_PER_SCANNING - self.DISTANCE_ENTER), 300)
 
         if (self.emergency_stop):
             self.stop()
@@ -213,8 +243,9 @@ class RobotScannerOfRoom:
         
         
         try:
+            
             # The robot enters at 9 cm from the orange door, so make it backup to the middle of the orange dorr
-            self.move_robot(-(self.DISTANCE_ENTER - self.DISTANCE_PER_SCANNING), 200)
+            self.move_robot_orange_door(200)
             time.sleep(2)
             
             
@@ -222,7 +253,6 @@ class RobotScannerOfRoom:
                 # If the robot travelled the whole room, it finished scanning it so it needs to go back to the robot's entrance position
                 if (total_distance>= self.MAX_ROOM_DISTANCE):
                     self.move_back_after_scanning(total_distance)
-                    counter = 0
                     position = "left"
                     return False  # No green detected so no block dropped
 
@@ -286,4 +316,4 @@ if __name__ == "__main__":
     LEFT_WHEEL = Motor("B")
     RIGHT_WHEEL = Motor("C")
     scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
-    scanner.scan_room(1)
+    scanner.scan_room(0)
