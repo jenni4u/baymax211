@@ -88,7 +88,7 @@ def move_forward(distance,
     t = degrees / abs(speed)  
 
     now = time.time()
-    end = now + t
+    end = now + t   
 
     # move motors until time elapses
     left_wheel.set_dps(speed)
@@ -102,12 +102,12 @@ def move_forward(distance,
 
 def line_follower_distance(distance: float,
                             kp = KP,
-                         left_motor: Motor = LEFT_WHEEL, 
-                         right_motor: Motor = RIGHT_WHEEL,
-                         color_sensor: EV3ColorSensor = COLOR_SENSOR,
-                         speed: float = BASE_SPEED,
-                         target: float = TARGET
-                         ) -> None:
+                            left_motor: Motor = LEFT_WHEEL, 
+                            right_motor: Motor = RIGHT_WHEEL,
+                            color_sensor: EV3ColorSensor = COLOR_SENSOR,
+                            speed: float = BASE_SPEED,
+                            target: float = TARGET
+                            ) -> None:
     """
     Follows line for a specified distance. The robot moves straight.
     Args:
@@ -121,6 +121,8 @@ def line_follower_distance(distance: float,
     forward = False
     if distance > 0:
         forward = True
+    else:
+        speed = BACK_SPEED
 
     curr_degrees = (left_motor.get_encoder() + right_motor.get_encoder())/2
     # print("curr_degrees: " + str(curr_degrees))
@@ -161,8 +163,8 @@ def line_follower_distance(distance: float,
             # print("Degrees left to achieve: " + str((degrees_to_achieve - (left_motor.get_encoder() + right_motor.get_encoder())/2)))
             curr_val: float = get_reflected_light_reading(color_sensor, 3) 
             correction_factor: float = -(curr_val - target) * kp
-            left_motor.set_dps(-speed - correction_factor)
-            right_motor.set_dps(-speed + correction_factor)
+            left_motor.set_dps(-(speed + correction_factor))
+            right_motor.set_dps(-(speed - correction_factor))
             busy_sleep(0.03)               
         left_motor.set_dps(0)
         right_motor.set_dps(0)
@@ -195,8 +197,8 @@ def line_follower(direction: bool = True,
         base_speed = BACK_SPEED
         kp = KP -0.2
         
-    left_motor.reset_encoder()
-    right_motor.reset_encoder()
+    # left_motor.reset_encoder()
+    # right_motor.reset_encoder()
 
     curr_val: float = get_reflected_light_reading(color_sensor, 3)
     #print("curr_val" + str(curr_val))
@@ -215,8 +217,8 @@ def line_follower(direction: bool = True,
             left_motor.set_dps(base_speed - correction_factor)
             right_motor.set_dps(base_speed + correction_factor)
         else:
-            left_motor.set_dps(-(base_speed + correction_factor))
-            right_motor.set_dps(-(base_speed - correction_factor))
+            left_motor.set_dps(base_speed - correction_factor)
+            right_motor.set_dps(base_speed + correction_factor)
         busy_sleep(0.02)
         curr_val: float = get_reflected_light_reading(color_sensor, 3)
         # print("curr_val" + str(curr_val))
@@ -247,12 +249,12 @@ def turn_room(left_motor: Motor = LEFT_WHEEL,
     if emergency_stop:
         return
         
-    time_needed = (90 * diameter_axis) / (2 * abs(dps) * radius)
+    time_needed = (87 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
     while time.time() < stop_time and not emergency_stop:
-        busy_sleep(0.01)
+        busy_sleep(0.005)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 
@@ -273,7 +275,7 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
     busy_sleep(1.5)
     while color_sensor.get_red() > 12 and not emergency_stop:
         busy_sleep(0.03)
-        dps += 20
+    dps += 20
     while get_reflected_light_reading(color_sensor, 3) < (TARGET + 2) and not emergency_stop:
         left_motor.set_dps(dps)
         right_motor.set_dps(-dps)
@@ -301,16 +303,17 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
         
     left_motor.set_dps(dps)
     right_motor.set_dps(-dps)
-    busy_sleep(2)
+    busy_sleep(1)
     print("now looking for black line")
     while get_reflected_light_reading(color_sensor, 3) > (12) and not emergency_stop:
         busy_sleep(0.03)
 
     dps += 20
+    print("looking for edge")
+    left_motor.set_dps(-dps)
+    right_motor.set_dps(dps)
     while get_reflected_light_reading(color_sensor, 3) < (TARGET + 2) and not emergency_stop:
-        left_motor.set_dps(-dps)
-        right_motor.set_dps(dps)
-    busy_sleep(0.01)
+        continue
     left_motor.set_dps(0)
     right_motor.set_dps(0)
 

@@ -85,17 +85,17 @@ if __name__ == "__main__":
             if lf.emergency_stop:
                     break
                 
-            # color_sensor.set_mode("component")
-            # wait_ready_sensors(True)
+            color_sensor.set_mode("component")
+            wait_ready_sensors(True)
             
-            # scanner_room.scanner.reset_both_motors_to_initial_position()
-            # if scanner_room.scan_room(delivery_counter):
-            #     print("did the scanning")
-            #     delivery_counter += 1
-            #     print(f"Delivery successful! Total deliveries: {delivery_counter}")
-            # time.sleep(4)
-            # color_sensor.set_mode("red")
-            # wait_ready_sensors(True)
+            scanner_room.scanner.reset_both_motors_to_initial_position()
+            if scanner_room.scan_room(delivery_counter):
+                print("did the scanning")
+                delivery_counter += 1
+                print(f"Delivery successful! Total deliveries: {delivery_counter}")
+            time.sleep(4)
+            color_sensor.set_mode("red")
+            wait_ready_sensors(True)
             
             lf.undo_turn_room(left_motor, right_motor)
             if lf.emergency_stop:
@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
         elif INTERSECTION_PATTERN[i] == ST_ROOM:
             print("At storage room, skipping for now")
-            lf.line_follower_distance(3)
+            lf.move_forward(3)
 
 
 
