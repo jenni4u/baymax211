@@ -133,7 +133,7 @@ class RobotScannerOfRoom:
         # If the deliver_count is 0 (no block dropped yet), the angle is 30. Else, the robot must move of 50
         angle_movement = 0
         if (delivery_counter == 0):
-            angle_movement = 30
+            angle_movement = 27
         else:
             angle_movement = 50
 
@@ -218,7 +218,7 @@ class RobotScannerOfRoom:
             time.sleep(2)
             
             
-            while True:
+            while True and not self.emergency_stop:
                 # If the robot travelled the whole room, it finished scanning it so it needs to go back to the robot's entrance position
                 if (total_distance>= self.MAX_ROOM_DISTANCE):
                     self.move_back_after_scanning(total_distance)
