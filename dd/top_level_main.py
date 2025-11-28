@@ -5,6 +5,13 @@ import line_follower as lf
 import threading
 import time
 
+## === Sound =====
+#import sounds_utils
+##sound for the beginning of the mission
+#sounds_utils.play_wav("baymax.wav")
+##sound for mission complete
+#sounds_utils.play_wav("you-have-been-a-good-boy-lollipop.wav")
+
 # === Initialization ===
 left_motor = Motor("B")
 right_motor = Motor("C")
