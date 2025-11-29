@@ -62,7 +62,7 @@ if __name__ == "__main__":
     delivery_counter = 0
     room_counter = 0
 
-    
+    lf.line_follower_distance(2.0, -1.3, left_motor, right_motor, color_sensor, -80, 24)
 
     for i in range(len(INTERSECTION_PATTERN)):
         
@@ -71,7 +71,8 @@ if __name__ == "__main__":
                 break
         
         # move until next intersection
-        lf.line_follower(left_motor=left_motor, right_motor=right_motor, color_sensor=color_sensor)
+        reading = lf.line_follower(left_motor=left_motor, right_motor=right_motor, color_sensor=color_sensor)
+        print("Stopped because read black value of: ", reading)
         if lf.emergency_stop:
                 break
             
@@ -85,30 +86,32 @@ if __name__ == "__main__":
             if lf.emergency_stop:
                     break
                 
-            color_sensor.set_mode("component")
-            wait_ready_sensors(True)
+            # color_sensor.set_mode("component")
+            # wait_ready_sensors(True)
             
-            scanner_room.scanner.reset_both_motors_to_initial_position()
-            if scanner_room.scan_room(delivery_counter):
-                print("did the scanning")
-                delivery_counter += 1
-                print(f"Delivery successful! Total deliveries: {delivery_counter}")
-            time.sleep(4)
-            color_sensor.set_mode("red")
-            wait_ready_sensors(True)
+            # scanner_room.scanner.reset_both_motors_to_initial_position()
+            # if scanner_room.scan_room(delivery_counter):
+            #     print("did the scanning")
+            #     delivery_counter += 1
+            #     print(f"Delivery successful! Total deliveries: {delivery_counter}")
+            # time.sleep(4)
+            # color_sensor.set_mode("red")
+            # wait_ready_sensors(True)
             
             lf.undo_turn_room(left_motor, right_motor)
+            lf.line_follower_distance(4, -1.8, left_motor, right_motor, color_sensor, -80, 24) #aggressive correction
             if lf.emergency_stop:
                     break
             
             # update room number
             room_counter += 1
             if room_counter == 4:
-                return_home(room_counter)
+                rt.return_home(room_counter)
                 break
 
             # go back to storage room if 2 deliveries completed
             if delivery_counter == 2:
+                busy_sleep(1)
                 print("All deliveries completed.")
                 rt.return_home(room_counter)
                 break

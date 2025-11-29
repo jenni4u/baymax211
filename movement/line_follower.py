@@ -9,11 +9,14 @@ emergency_stop = False
 
 
 # CONTROL PARAMETERS
-BASE_SPEED = -200       # default wheel DPS
+BASE_SPEED = -250       # default wheel DPS
 BACK_SPEED = 100
 TURN_SPEED = -150
+UNDO_TURN_SPEED = -80
+CORRECTION_UNDO_TURN_SPEED = -50
+GET_OUT_OF_ORANGE_TIME = 0.6  # seconds to turn when getting out of orange tile
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
-TARGET = 22          # Color sensor is halfway between black and white, at the edge of a line
+TARGET = 24          # Color sensor is halfway between black and white, at the edge of a line
 TARGET_THRESHOLD = 8   # acceptable error range from target
 MAX_CORRECTION = 100
 BLACK_THRESHOLD = 10   # color sensor is placed at exact middle of line
@@ -47,7 +50,7 @@ intersections_counter = 0
 counter = 0
 
 
-def get_reflected_light_reading(color_sensor: EV3ColorSensor = COLOR_SENSOR, scans: int = 3) -> float:
+def get_reflected_light_reading(color_sensor: EV3ColorSensor = COLOR_SENSOR, scans: int = 5) -> float:
     """
     Average several color sensor readings for stability.
     
@@ -61,6 +64,13 @@ def get_reflected_light_reading(color_sensor: EV3ColorSensor = COLOR_SENSOR, sca
     for i in range(scans):
         total += color_sensor.get_red()
     return total / scans
+
+
+def light_test():
+    while True:
+        start_time = time.time()
+        print(get_reflected_light_reading())
+        print(time.time() - start_time)
 
 
 def stop(left_motor: Motor = LEFT_WHEEL, 
@@ -176,7 +186,7 @@ def line_follower(direction: bool = True,
                   kp: float = KP, 
                   target: float = TARGET, 
                   base_speed: float = BASE_SPEED
-                  ) -> None:
+                  ) -> float:
     """ 
     Follows line indefinitely until black threshold is crossed (intersection).
     Follows left edge of the line, half on line half on white is ideal position
@@ -196,36 +206,36 @@ def line_follower(direction: bool = True,
     if not direction:
         base_speed = BACK_SPEED
         kp = KP -0.2
-        
-    # left_motor.reset_encoder()
-    # right_motor.reset_encoder()
-
-    curr_val: float = get_reflected_light_reading(color_sensor, 3)
-    #print("curr_val" + str(curr_val))
     
-    while curr_val > BLACK_THRESHOLD and not emergency_stop:
-        # Get current reflected light value
-        curr_val: float = get_reflected_light_reading(color_sensor, 3)
-        #print("curr_val" + str(curr_val))
+    while not emergency_stop:
+        # Get current reflected light value (reduced scans for faster response)
+        curr_val: float = get_reflected_light_reading()
+        # print("curr_val: " + str(curr_val))
+        
+        # Stop if we hit intersection
+        if curr_val <= BLACK_THRESHOLD:
+            break
     
         # Calculate correction factor
         correction_factor: float = -(curr_val - target) * kp
-        #print("correction factor is: " + str(correction_factor))
+        # print("correction factor: " + str(correction_factor))
 
-        # Apply correction to motor speeds, corrected with direction
+        # Apply correction to motor speeds
         if direction:
             left_motor.set_dps(base_speed - correction_factor)
             right_motor.set_dps(base_speed + correction_factor)
         else:
             left_motor.set_dps(base_speed - correction_factor)
             right_motor.set_dps(base_speed + correction_factor)
-        busy_sleep(0.02)
-        curr_val: float = get_reflected_light_reading(color_sensor, 3)
-        # print("curr_val" + str(curr_val))
+        
+        # Small delay to prevent overwhelming the sensor
+        busy_sleep(0.01)
 
     # Stop motors
     left_motor.set_dps(0)
     right_motor.set_dps(0)
+
+    return curr_val
 
 def turn_room(left_motor: Motor = LEFT_WHEEL, 
                        right_motor: Motor = RIGHT_WHEEL, 
@@ -272,13 +282,12 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
         
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
-    busy_sleep(1.5)
-    while color_sensor.get_red() > 12 and not emergency_stop:
+    busy_sleep(GET_OUT_OF_ORANGE_TIME)
+    while color_sensor.get_red() > 10 and not emergency_stop:
         busy_sleep(0.03)
-    dps += 20
     while get_reflected_light_reading(color_sensor, 3) < (TARGET + 2) and not emergency_stop:
-        left_motor.set_dps(dps)
-        right_motor.set_dps(-dps)
+        left_motor.set_dps(-CORRECTION_UNDO_TURN_SPEED)
+        right_motor.set_dps(CORRECTION_UNDO_TURN_SPEED)
     
     left_motor.set_dps(0)
     right_motor.set_dps(0)
@@ -287,7 +296,7 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
 def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
                     right_motor: Motor = RIGHT_WHEEL, 
                     color_sensor: EV3ColorSensor = COLOR_SENSOR,
-                    dps: int = TURN_SPEED+10) -> None:
+                    dps: int = TURN_SPEED+20) -> None:
     """
     Turns the robot 90 degrees to the left on the spot (undo right turn).
     Args:
@@ -305,17 +314,17 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
     right_motor.set_dps(-dps)
     busy_sleep(1)
     print("now looking for black line")
-    while get_reflected_light_reading(color_sensor, 3) > (12) and not emergency_stop:
-        busy_sleep(0.03)
+    while get_reflected_light_reading() > (10) and not emergency_stop:
+        busy_sleep(0.01)
 
-    dps += 20
-    print("looking for edge")
-    left_motor.set_dps(-dps)
-    right_motor.set_dps(dps)
-    while get_reflected_light_reading(color_sensor, 3) < (TARGET + 2) and not emergency_stop:
-        continue
+    # print("looking for edge")
+    # left_motor.set_dps(-CORRECTION_UNDO_TURN_SPEED)
+    # right_motor.set_dps(CORRECTION_UNDO_TURN_SPEED)
+    # while get_reflected_light_reading() < (TARGET) and not emergency_stop:
+    #     busy_sleep(0.001)
     left_motor.set_dps(0)
     right_motor.set_dps(0)
+    busy_sleep(0.1)
 
 
 def smooth_turn(left_motor: Motor = LEFT_WHEEL, 
