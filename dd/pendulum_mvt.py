@@ -46,7 +46,17 @@ class PendulumScanner:
         
         self.emergency_stop = False
 
-
+    def trigger_emergency_stop(self):
+        """
+        Stops the movement upon external emergency signal (Touch Sensor).
+        Called ONLY by the external monitor thread.
+        """
+        print("!!! EMERGENCY STOP TRIGGERED !!!")
+        self.emergency_stop = True
+        
+        # Immediately issue non-blocking stop commands
+        self.motor_color_sensor.set_dps(0) 
+        self.motor_block.set_dps(0)
 
     #---------- COLOR CLASSIFICATION ----------#
 
