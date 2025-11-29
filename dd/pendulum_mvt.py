@@ -37,6 +37,8 @@ class PendulumScanner:
 
         # Color classifier
         self.color_detection_algorithm = ColorDetectionAlgorithm()
+        self.initial_color = self.motor_color_sensor.get_position()
+        self.initial_block = self.motor_block.get_position()
 
         # Variables for the movement of the arms and detection of sensor
         self.detected_color = None 
@@ -46,17 +48,7 @@ class PendulumScanner:
         
         self.emergency_stop = False
 
-    def trigger_emergency_stop(self):
-        """
-        Stops the movement upon external emergency signal (Touch Sensor).
-        Called ONLY by the external monitor thread.
-        """
-        print("!!! EMERGENCY STOP TRIGGERED !!!")
-        self.emergency_stop = True
-        
-        # Immediately issue non-blocking stop commands
-        self.motor_color_sensor.set_dps(0) 
-        self.motor_block.set_dps(0)
+
 
     #---------- COLOR CLASSIFICATION ----------#
 
@@ -100,7 +92,7 @@ class PendulumScanner:
         count_red = 0
 
 
-        while not self.stopped_color_detection and not self.emergency_stop:
+        while not self.stopped_color_detection and not self.stopped_motor_block and not self.stopped_motor_color_sensor:
             try:
 
                 # Read the values and ensure they are valid numbers
@@ -157,8 +149,14 @@ class PendulumScanner:
 
 
     #---------- ARMS MOVEMENT ----------#
+    def get_pos(self, motor):
+        if motor == self.motor_color_sensor:
+            return self.initial_color
+        else:
+            return self.initial_block
 
-    def move_motor(self, motor, left, right):
+    
+    def move_motor(self, motor, left, right, position):
 
             
         """
@@ -174,10 +172,13 @@ class PendulumScanner:
     
 
         print('System is Ready!')
+        
+        
 
         motor.set_dps(self.MOTOR_DPS) # Activate the arm (i.e. set its speed)
         time.sleep(0.01)
-        print(motor.get_position())
+        print(self.get_pos(motor))
+        
         # If stopped_color_detection is true, it means a Red or Green was detected, so stop the motor's arm
         if self.stopped_color_detection:
             motor.set_dps(0)
@@ -191,12 +192,15 @@ class PendulumScanner:
 #             time.sleep(1)
 
         # If the arm is at the right of the robot, move it to the left side of the robot    
-        elif(motor.get_position() > 0) :
-            if (self.emergency_stop):
-                self.stop_the_arms_movement()
-                return
-
-            motor.set_position(left)
+        
+        #elif(motor.get_position() >0):
+        if (self.emergency_stop):
+            self.stop_the_arms_movement()
+            return
+        
+        if (position == "right"):
+            motor.set_position(self.get_pos(motor) + left)
+            position = left
             time_wait = 0
             while (time_wait < 1):
                 if (self.emergency_stop):
@@ -207,11 +211,13 @@ class PendulumScanner:
 
 
         # If the arm is at the left of the robot, move it to the right side of the robot  
-        else :
-            if (self.emergency_stop):
-                self.stop_the_arms_movement()
-                return
-            motor.set_position(right)
+    
+    
+        if (self.emergency_stop):
+            self.stop_the_arms_movement()
+            return
+        if (position == "left"):
+            motor.set_position(self.get_pos(motor) + right)
             time_wait = 0
             while (time_wait < 1):
                 if (self.emergency_stop):
@@ -219,10 +225,13 @@ class PendulumScanner:
                     return
                 time.sleep(0.1)
                 time_wait+=0.1
+        
+        
 
 
 
-    def move_motor_pendulum(self): 
+     
+    def move_motor_pendulum(self, position): 
 
         """
         Function that moves the color sensor arm to scan the width of the room.
@@ -230,14 +239,14 @@ class PendulumScanner:
         """
 
         
-        self.move_motor(self.motor_color_sensor, self.LEFT_POSITION, self.RIGHT_POSITION)
+        self.move_motor(self.motor_color_sensor, self.LEFT_POSITION, self.RIGHT_POSITION, position)
 
         # The scanning is done and no color has been detected, so stop the arm and variable stopped_motor_color_sensor should be set to True
         self.motor_color_sensor.set_dps(0)
         self.stopped_motor_color_sensor = True
 
 
-    def move_motor_block(self): 
+    def move_motor_block(self, position): 
   
         """
             Function that moves the block arm to scan the width of the room.
@@ -246,7 +255,7 @@ class PendulumScanner:
 
         print('System is Ready!')
         
-        self.move_motor(self.motor_block, self.LEFT_POSITION_2, self.RIGHT_POSITION_2)
+        self.move_motor(self.motor_block, self.LEFT_POSITION_2, self.RIGHT_POSITION_2, position)
 
         self.motor_block.set_dps(0)
         self.stopped_motor_block = True   
@@ -256,7 +265,7 @@ class PendulumScanner:
 
     #------------- JOIN THE 3 SYSTEMS -------------#
 
-    def main_pendulum(self):
+    def main_pendulum(self, position):
 
         """
         Function that runs the sampling of the color sensor, the movement of the color arm and the movement of the block arm at the same time
@@ -274,8 +283,8 @@ class PendulumScanner:
 
         try:
             color_thread = threading.Thread(target=self.color_sample)
-            move_pendulum_thread = threading.Thread(target=self.move_motor_pendulum)
-            move_block_thread = threading.Thread(target=self.move_motor_block)
+            move_pendulum_thread = threading.Thread(target=self.move_motor_pendulum, args=(position,))
+            move_block_thread = threading.Thread(target=self.move_motor_block, args=(position,))
 
             color_thread.start()
             move_pendulum_thread.start()
@@ -305,17 +314,18 @@ class PendulumScanner:
         """
 
         motor.set_dps(self.MOTOR_DPS)
+        time_wait = 0
         if (self.emergency_stop):
                 self.stop_the_arms_movement()
                 return
-        motor.set_position(self.INITIAL_POSITION)
+        motor.set_position(0)
 
         while (time_wait < 1):
             if (self.emergency_stop):
                 self.stop_the_arms_movement()
                 return
-
-
+            time.sleep(0.1)
+            time_wait+=0.1
 
         motor.set_dps(0)
 

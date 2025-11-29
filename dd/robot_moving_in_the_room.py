@@ -1,9 +1,7 @@
 from utils.brick import EV3ColorSensor, TouchSensor, Motor, BP, wait_ready_sensors
 import math
 import time
-import threading
 from pendulum_mvt import PendulumScanner
-from color_detection_algorithm import ColorDetectionAlgorithm
 
 
 class RobotScannerOfRoom:
@@ -51,18 +49,6 @@ class RobotScannerOfRoom:
         RIGHT_WHEEL.reset_encoder()
 
         self.emergency_stop = False
-
-    def trigger_emergency_stop(self):
-        """
-        Stops the movement upon external emergency signal (Touch Sensor).
-        Called ONLY by the external monitor thread.
-        """
-        print("!!! EMERGENCY STOP TRIGGERED !!!")
-        self.emergency_stop = True
-        
-        # Immediately issue non-blocking stop commands
-        self.motor_color_sensor.set_dps(0) 
-        self.motor_block.set_dps(0)
 
 
     #-------- MOVE THE ROBOT ------------#
@@ -130,39 +116,10 @@ class RobotScannerOfRoom:
             self.stop()
             return
         
-    def get_detected_color(self):
-        color = None
-        values = self.COLOR_SENSOR.get_value()
-        if values:
-           
-            R, G, B, L = values
-            color = self.color_detection_algorithm.classify_the_color(R, G, B)
-
-        
-        return  color
-    
-    def move_robot_orange_door(self,  dps):
-
-        count = 0
-       
-        self.RIGHT_WHEEL.set_dps(dps)
-        self.LEFT_WHEEL.set_dps(dps)
-        
-        while(not self.emergency_stop):
-            color = self.get_detected_color()
-            if color == "orange":
-                count+= 1
-            else:
-                count = 0
-            if (count >=5):
-                break
-                
-
-        self.stop()
 
 
 
-
+  
     def package_delivery(self,total_distance, delivery_counter):
 
         """
@@ -171,16 +128,13 @@ class RobotScannerOfRoom:
             total_distance (float): The total distance the robot travelled in the room starting from the center of the orange door (color sensor)
             delivery_count (float): The number of blocks dropped
         """
-            
+          
         # Determine how much the color sensor must move. 
         # If the deliver_count is 0 (no block dropped yet), the angle is 30. Else, the robot must move of 50
         angle_movement = 0
         if (delivery_counter == 0):
             angle_movement = 27
-<<<<<<< HEAD
             angle_movement = 30
-=======
->>>>>>> parent of 37d30dd (From testing, made sure the arms don't move opposite direction)
         else:
             angle_movement = 50
 
@@ -248,7 +202,7 @@ class RobotScannerOfRoom:
         Returns:
             Boolean: Return the if a block was dropped or not
         """
-            
+          
         # Initialize the wheels and the total_distance to 0
         total_distance = 0
         self.RIGHT_WHEEL.set_dps(0)
@@ -256,18 +210,21 @@ class RobotScannerOfRoom:
         self.LEFT_WHEEL.set_position_relative(0)
         self.RIGHT_WHEEL.set_position_relative(0)
         time.sleep(0.05)
+        position = "left"
         
         
         try:
             # The robot enters at 9 cm from the orange door, so make it backup to the middle of the orange dorr
-            self.move_robot_orange_door(200)
+            self.move_robot(-(self.DISTANCE_ENTER - self.DISTANCE_PER_SCANNING), 200)
             time.sleep(2)
             
             
-            while True and not self.emergency_stop:
+            while True:
                 # If the robot travelled the whole room, it finished scanning it so it needs to go back to the robot's entrance position
                 if (total_distance>= self.MAX_ROOM_DISTANCE):
                     self.move_back_after_scanning(total_distance)
+                    counter = 0
+                    position = "left"
                     return False  # No green detected so no block dropped
 
                 # Else, the robot is still scanning the room
@@ -276,8 +233,7 @@ class RobotScannerOfRoom:
                 self.move_robot(self.DISTANCE_PER_SCANNING, 150)
                 total_distance += self.DISTANCE_PER_SCANNING
                 time.sleep(1.5)
-<<<<<<< HEAD
-        
+                color = self.scanner.main_pendulum()
                 color = self.scanner.main_pendulum(position)
                 if (position == "left"):
                     position = "right"
@@ -286,11 +242,10 @@ class RobotScannerOfRoom:
                 
                 #counter+=1
                 
-=======
-                color = self.scanner.main_pendulum()
->>>>>>> parent of 37d30dd (From testing, made sure the arms don't move opposite direction)
             
 
+                # If the color detected by the scanning is red, both wheels should stop moving
+                # Then, the robot go back to the robot's entrance position
                 if color == "red":
                     self.RIGHT_WHEEL.set_dps(0)
                     self.LEFT_WHEEL.set_dps(0)
@@ -300,6 +255,8 @@ class RobotScannerOfRoom:
                     time.sleep(0.2)
                     # Advance the robot to the entrance position. If red was detected, it should have be from a distance of 3 DISTANCE_PER_SCANNING from the extremity of the room
                     self.move_robot(self.DISTANCE_ENTER - self.DISTANCE_PER_SCANNING*3, 150)
+                    position = "left"
+                    counter = 0
                     
                     return False # No green detected so no block dropped
 
@@ -311,11 +268,15 @@ class RobotScannerOfRoom:
                     self.LEFT_WHEEL.set_dps(0)   
                     self.package_delivery(total_distance, delivery_counter)
                     total_distance = 0 # Once done moving back, set the total_distance to 0
+                    counter = 0
+                    position = "left"
+                    
                     return True # Green detected so block dropped -> True
 
 
         except BaseException as error:
             print("Error during scan_room:", error)
+            counter = 0
             BP.reset_all()  
 
 
@@ -327,35 +288,4 @@ if __name__ == "__main__":
     LEFT_WHEEL = Motor("B")
     RIGHT_WHEEL = Motor("C")
     scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
-    
-    TOUCH_SENSOR = TouchSensor(4)
-
-    def touch_sensor_monitor(scanner):
-        while not scanner.emergency_stop:
-            try:
-                if TOUCH_SENSOR.is_pressed(): 
-                    scanner.trigger_emergency_stop()
-                    reset_brick()
-                    break 
-            except SensorError:
-                time.sleep(0.05)
-            time.sleep(0.05)
     scanner.scan_room(1)
-
-try:
-        # Start the Touch Sensor monitoring thread
-        monitor_thread = threading.Thread(target=touch_sensor_monitor, args=(scanner_of_room,))
-        monitor_thread.start()
-        print("Touch sensor monitor started.")
-
-        # Run the mission
-        block_dropped = scanner.scan_room(0)
-        print(f"Mission finished. Block dropped: {block_dropped}")
-        
-        # Wait for monitor thread to clean up
-        monitor_thread.join()
-
-except Exception as e:
-    print(f"Main execution error: {e}")
-finally:
-    BP.reset_all()

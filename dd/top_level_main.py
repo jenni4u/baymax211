@@ -1,4 +1,4 @@
-from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep, TouchSensor
+from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep, TouchSensor, reset_brick
 import return_home as rt
 from robot_moving_in_the_room import RobotScannerOfRoom
 import line_follower as lf
@@ -18,10 +18,15 @@ right_motor = Motor("C")
 scanner_motor = Motor("A")  # Assuming motor A is for the scanner
 drop_motor = Motor("D")     # Assuming motor D is for dropping blocks
 color_sensor = EV3ColorSensor(3)
-touch_sensor = TouchSensor(4)  
+touch_sensor = TouchSensor(4)
+
+drop_motor.reset_encoder()
+scanner_motor.reset_encoder()
+drop_motor.set_position(0)
+scanner_motor.set_position(0)
 
 scanner_room = RobotScannerOfRoom(scanner_motor, drop_motor, color_sensor, right_motor, left_motor)
-
+color_sensor.set_mode("red")
 wait_ready_sensors(True)
 
 
@@ -49,8 +54,7 @@ def emergency_stop_monitor():
                 scanner_room.scanner.stop_the_arms_movement()
                 lf.stop()
                 BP.reset_all()
-                #reset_brick()
-                sys.exit()
+                reset_brick()
             time.sleep(0.05)  # Check every 50ms
         except Exception as e:
             print(f"Error in emergency stop monitor: {e}")
@@ -72,9 +76,6 @@ if __name__ == "__main__":
         if lf.emergency_stop:
                 print("Operation cancelled due to emergency stop.")
                 break
-            
-        color_sensor.set_mode("red")
-        wait_ready_sensors(True)
         
         # move until next intersection
         lf.line_follower(left_motor=left_motor, right_motor=right_motor, color_sensor=color_sensor)
@@ -94,11 +95,12 @@ if __name__ == "__main__":
             color_sensor.set_mode("component")
             wait_ready_sensors(True)
             
+            scanner_room.scanner.reset_both_motors_to_initial_position()
             if scanner_room.scan_room(delivery_counter):
                 print("did the scanning")
                 delivery_counter += 1
                 print(f"Delivery successful! Total deliveries: {delivery_counter}")
-                time.sleep(4)
+            time.sleep(4)
             color_sensor.set_mode("red")
             wait_ready_sensors(True)
             
@@ -108,6 +110,9 @@ if __name__ == "__main__":
             
             # update room number
             room_counter += 1
+            if room_counter == 4:
+                return_home(room_counter)
+                break
 
             # go back to storage room if 2 deliveries completed
             if delivery_counter == 2:
