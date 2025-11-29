@@ -1,9 +1,7 @@
-from utils.brick import EV3ColorSensor, TouchSensor, Motor, BP, wait_ready_sensors
+from utils.brick import EV3ColorSensor, Motor, BP, wait_ready_sensors
 import math
 import time
-import threading
 from pendulum_mvt import PendulumScanner
-from color_detection_algorithm import ColorDetectionAlgorithm
 
 
 class RobotScannerOfRoom:
@@ -51,18 +49,6 @@ class RobotScannerOfRoom:
         RIGHT_WHEEL.reset_encoder()
 
         self.emergency_stop = False
-
-    def trigger_emergency_stop(self):
-        """
-        Stops the movement upon external emergency signal (Touch Sensor).
-        Called ONLY by the external monitor thread.
-        """
-        print("!!! EMERGENCY STOP TRIGGERED !!!")
-        self.emergency_stop = True
-        
-        # Immediately issue non-blocking stop commands
-        self.motor_color_sensor.set_dps(0) 
-        self.motor_block.set_dps(0)
 
 
     #-------- MOVE THE ROBOT ------------#
@@ -130,35 +116,6 @@ class RobotScannerOfRoom:
             self.stop()
             return
         
-    def get_detected_color(self):
-        color = None
-        values = self.COLOR_SENSOR.get_value()
-        if values:
-           
-            R, G, B, L = values
-            color = self.color_detection_algorithm.classify_the_color(R, G, B)
-
-        
-        return  color
-    
-    def move_robot_orange_door(self,  dps):
-
-        count = 0
-       
-        self.RIGHT_WHEEL.set_dps(dps)
-        self.LEFT_WHEEL.set_dps(dps)
-        
-        while(not self.emergency_stop):
-            color = self.get_detected_color()
-            if color == "orange":
-                count+= 1
-            else:
-                count = 0
-            if (count >=5):
-                break
-                
-
-        self.stop()
 
 
 
@@ -258,11 +215,11 @@ class RobotScannerOfRoom:
         
         try:
             # The robot enters at 9 cm from the orange door, so make it backup to the middle of the orange dorr
-            self.move_robot_orange_door(200)
+            self.move_robot(-(self.DISTANCE_ENTER - self.DISTANCE_PER_SCANNING), 200)
             time.sleep(2)
             
             
-            while True and not self.emergency_stop:
+            while True:
                 # If the robot travelled the whole room, it finished scanning it so it needs to go back to the robot's entrance position
                 if (total_distance>= self.MAX_ROOM_DISTANCE):
                     self.move_back_after_scanning(total_distance)
@@ -329,35 +286,4 @@ if __name__ == "__main__":
     LEFT_WHEEL = Motor("B")
     RIGHT_WHEEL = Motor("C")
     scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
-    
-    TOUCH_SENSOR = TouchSensor(4)
-
-    def touch_sensor_monitor(scanner):
-        while not scanner.emergency_stop:
-            try:
-                if TOUCH_SENSOR.is_pressed(): 
-                    scanner.trigger_emergency_stop()
-                    reset_brick()
-                    break 
-            except SensorError:
-                time.sleep(0.05)
-            time.sleep(0.05)
     scanner.scan_room(1)
-
-try:
-        # Start the Touch Sensor monitoring thread
-        monitor_thread = threading.Thread(target=touch_sensor_monitor, args=(scanner_of_room,))
-        monitor_thread.start()
-        print("Touch sensor monitor started.")
-
-        # Run the mission
-        block_dropped = scanner.scan_room(0)
-        print(f"Mission finished. Block dropped: {block_dropped}")
-        
-        # Wait for monitor thread to clean up
-        monitor_thread.join()
-
-except Exception as e:
-    print(f"Main execution error: {e}")
-finally:
-    BP.reset_all()
