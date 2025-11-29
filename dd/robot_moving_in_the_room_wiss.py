@@ -1,7 +1,7 @@
 from utils.brick import EV3ColorSensor, TouchSensor, Motor, BP, wait_ready_sensors
 import math
 import time
-from pendulum_mvt_wiss import PendulumScanner
+from pendulum_mvt import PendulumScanner
 import threading
 
 class RobotScannerOfRoom:
@@ -80,7 +80,7 @@ class RobotScannerOfRoom:
         self.scanner.motor_color_sensor.set_dps(0)
 
         # Return arm to initial angle
-        self.scanner.motor_color_sensor.set_dps(50)
+        self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100)
         self.scanner.motor_color_sensor.set_position(initial_angle)
         time.sleep(1.5)
         self.scanner.motor_color_sensor.set_dps(0)
