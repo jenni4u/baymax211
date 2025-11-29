@@ -2,6 +2,7 @@ from utils.brick import EV3ColorSensor, TouchSensor, Motor, BP, wait_ready_senso
 import math
 import time
 from pendulum_mvt import PendulumScanner
+import threading
 
 class RobotScannerOfRoom:
     RADIUS = 2
@@ -71,7 +72,7 @@ class RobotScannerOfRoom:
         angle_movement = 30 if delivery_counter == 0 else 50
         drop_angle = initial_angle + angle_movement if initial_angle < 0 else initial_angle - angle_movement
 
-        self.scanner.motor_color_sensor.set_dps(self.scanner.MOTOR_DPS - 100)
+        self.scanner.motor_color_sensor.set_dps(50)
         self.scanner.motor_color_sensor.set_position(drop_angle)
         time.sleep(2.5)
         self.scanner.motor_color_sensor.set_dps(0)
@@ -146,11 +147,31 @@ class RobotScannerOfRoom:
             BP.reset_all()
 
 #------------- RUNNING MAIN -------------# 
+touch_sensor = TouchSensor(4)
+motor_color_sensor = Motor("A") 
+motor_block = Motor("D") 
+COLOR_SENSOR = EV3ColorSensor(3) 
+LEFT_WHEEL = Motor("B") 
+RIGHT_WHEEL = Motor("C") 
+scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL) 
+
+def emergency_stop_monitor():
+    """Monitor touch sensor for emergency stop signal."""
+    print("Emergency stop monitor started. Press touch sensor to stop.")
+    while True:
+        
+        if touch_sensor.is_pressed():
+            print("\n*** EMERGENCY STOP ACTIVATED ***")
+            
+            scanner.emergency_stop = True
+            scanner.stop_the_arms_movement("emergency")
+            
+            BP.reset_all()
+            reset_brick()
+            break
+        time.sleep(0.05)  # Check every 50ms
+        
 if __name__ == "__main__": 
-    motor_color_sensor = Motor("A") 
-    motor_block = Motor("D") 
-    COLOR_SENSOR = EV3ColorSensor(3) 
-    LEFT_WHEEL = Motor("B") 
-    RIGHT_WHEEL = Motor("C") 
-    scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL) 
+    stop_thread = threading.Thread(target=emergency_stop_monitor, daemon=True)
+    stop_thread.start()
     scanner.scan_room(1)
