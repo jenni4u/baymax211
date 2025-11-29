@@ -48,17 +48,7 @@ class PendulumScanner:
         
         self.emergency_stop = False
 
-    def trigger_emergency_stop(self):
-        """
-        Stops the movement upon external emergency signal (Touch Sensor).
-        Called ONLY by the external monitor thread.
-        """
-        print("!!! EMERGENCY STOP TRIGGERED !!!")
-        self.emergency_stop = True
-        
-        # Immediately issue non-blocking stop commands
-        self.motor_color_sensor.set_dps(0) 
-        self.motor_block.set_dps(0)
+
 
     #---------- COLOR CLASSIFICATION ----------#
 
@@ -208,15 +198,12 @@ class PendulumScanner:
         
         if (position == "right"):
             motor.set_position(self.get_pos(motor) + left)
-            
+            if (self.emergency_stop):
+                self.stop_the_arms_movement()
+                return
             #position = left
-            time_wait = 0
-            while (time_wait < 1):
-                if (self.emergency_stop):
-                    self.stop_the_arms_movement()
-                    return
-                time.sleep(0.1)
-                time_wait+=0.1
+            time.sleep(1)
+        
 
 
         # If the arm is at the left of the robot, move it to the right side of the robot  
@@ -226,13 +213,14 @@ class PendulumScanner:
             return
         if (position == "left"):
             motor.set_position(self.get_pos(motor) + right)
-            time_wait = 0
-            while (time_wait < 1):
-                if (self.emergency_stop):
-                    self.stop_the_arms_movement()
-                    return
-                time.sleep(0.1)
-                time_wait+=0.1
+            if (self.emergency_stop):
+                self.stop_the_arms_movement()
+                return
+            time.sleep(1)
+
+        if (self.emergency_stop):
+            self.stop_the_arms_movement()
+            return
         
         
 
@@ -321,18 +309,19 @@ class PendulumScanner:
         """
 
         motor.set_dps(self.MOTOR_DPS)
-        time_wait = 0
         if (self.emergency_stop):
                 self.stop_the_arms_movement()
                 return
         motor.set_position(0)
-
-        while (time_wait < 1):
-            if (self.emergency_stop):
+        if (self.emergency_stop):
                 self.stop_the_arms_movement()
                 return
-            time.sleep(0.1)
-            time_wait+=0.1
+        time.sleep(1)
+        if (self.emergency_stop):
+                self.stop_the_arms_movement()
+                return
+
+
 
         motor.set_dps(0)
 
