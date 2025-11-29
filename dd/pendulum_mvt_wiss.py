@@ -40,7 +40,7 @@ class PendulumScanner:
         count_green = 0
         count_red = 0
 
-        while not self.stopped_color_detection and not self.stopped_motor_block and not self.stopped_motor_color_sensor:
+        while not self.stopped_color_detection and not self.emergency_stop:
             if self.emergency_stop:
                 self.stop_the_arms_movement("emergency")
                 return "emergency"
@@ -50,6 +50,7 @@ class PendulumScanner:
                 if values:
                     R, G, B, L = values
                     color = self.color_detection_algorithm.classify_the_color(R, G, B)
+                    print(color)
 
                     # Count consecutive greens or reds
                     if color == "green":
@@ -88,8 +89,9 @@ class PendulumScanner:
             motor.set_position(base_pos + left)
         else:
             motor.set_position(base_pos + right)
-
+           
         time.sleep(1)  # allow motor to move
+        
         motor.set_dps(0)
 
     def move_motor_pendulum(self, position):
@@ -121,3 +123,23 @@ class PendulumScanner:
         block_thread.join()
 
         return self.detected_color
+
+# ---------- RESET MOTORS ---------- #
+    def reset_motor_to_initial_position(self, motor):
+        motor.set_dps(self.MOTOR_DPS)
+        motor.set_position(0)
+        start_time = time.time()
+        while time.time() - start_time < 1:
+            if self.emergency_stop:
+                self.stop_the_arms_movement("emergency")
+                return
+            time.sleep(0.01)
+        motor.set_dps(0)
+
+    def reset_both_motors_to_initial_position(self):
+        t1 = threading.Thread(target=self.reset_motor_to_initial_position, args=(self.motor_color_sensor,))
+        t2 = threading.Thread(target=self.reset_motor_to_initial_position, args=(self.motor_block,))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()

@@ -31,6 +31,8 @@ class RobotScannerOfRoom:
     # ----- CENTRAL EMERGENCY STOP -----
     def stop_all_motors(self):
         """Stop both wheels and both arms immediately"""
+        self.scanner.emergency_stop = True
+        self.scanner.stop_the_arms_movement
         self.emergency_stop = True
         self.LEFT_WHEEL.set_dps(0)
         self.RIGHT_WHEEL.set_dps(0)
@@ -95,8 +97,8 @@ class RobotScannerOfRoom:
         try:
             # --- BACKUP UNTIL ORANGE DETECTED 5 TIMES ---
             count_orange = 0
-            self.RIGHT_WHEEL.set_dps(-150)  # move backward
-            self.LEFT_WHEEL.set_dps(-150)
+            self.RIGHT_WHEEL.set_dps(150)  # move backward
+            self.LEFT_WHEEL.set_dps(150)
 
             while count_orange < 5 and not self.emergency_stop:
                 try:
@@ -153,7 +155,8 @@ motor_block = Motor("D")
 COLOR_SENSOR = EV3ColorSensor(3) 
 LEFT_WHEEL = Motor("B") 
 RIGHT_WHEEL = Motor("C") 
-scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL) 
+scanner = RobotScannerOfRoom( motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
+wait_ready_sensors()
 
 def emergency_stop_monitor():
     """Monitor touch sensor for emergency stop signal."""
@@ -164,7 +167,7 @@ def emergency_stop_monitor():
             print("\n*** EMERGENCY STOP ACTIVATED ***")
             
             scanner.emergency_stop = True
-            scanner.stop_the_arms_movement("emergency")
+            scanner.stop_all_motors("emergency")
             
             BP.reset_all()
             reset_brick()
