@@ -48,17 +48,7 @@ class PendulumScanner:
         
         self.emergency_stop = False
 
-    def trigger_emergency_stop(self):
-        """
-        Stops the movement upon external emergency signal (Touch Sensor).
-        Called ONLY by the external monitor thread.
-        """
-        print("!!! EMERGENCY STOP TRIGGERED !!!")
-        self.emergency_stop = True
-        
-        # Immediately issue non-blocking stop commands
-        self.motor_color_sensor.set_dps(0) 
-        self.motor_block.set_dps(0)
+
 
     #---------- COLOR CLASSIFICATION ----------#
 
@@ -102,7 +92,7 @@ class PendulumScanner:
         count_red = 0
 
 
-        while not self.stopped_color_detection and not self.emergency_stop:
+        while not self.stopped_color_detection and not self.stopped_motor_block and not self.stopped_motor_color_sensor:
             try:
 
                 # Read the values and ensure they are valid numbers
@@ -165,6 +155,7 @@ class PendulumScanner:
         else:
             return self.initial_block
 
+    
     def move_motor(self, motor, left, right, position):
 
             
@@ -201,6 +192,7 @@ class PendulumScanner:
 #             time.sleep(1)
 
         # If the arm is at the right of the robot, move it to the left side of the robot    
+        
         #elif(motor.get_position() >0):
         if (self.emergency_stop):
             self.stop_the_arms_movement()
@@ -208,34 +200,37 @@ class PendulumScanner:
         
         if (position == "right"):
             motor.set_position(self.get_pos(motor) + left)
-            if (self.emergency_stop):
-                self.stop_the_arms_movement()
-                return
-            #position = left
-            time.sleep(1)
-        
+            position = left
+            time_wait = 0
+            while (time_wait < 1):
+                if (self.emergency_stop):
+                    self.stop_the_arms_movement()
+                    return
+                time.sleep(0.1)
+                time_wait+=0.1
 
 
         # If the arm is at the left of the robot, move it to the right side of the robot  
+    
     
         if (self.emergency_stop):
             self.stop_the_arms_movement()
             return
         if (position == "left"):
             motor.set_position(self.get_pos(motor) + right)
-            if (self.emergency_stop):
-                self.stop_the_arms_movement()
-                return
-            time.sleep(1)
-
-        if (self.emergency_stop):
-            self.stop_the_arms_movement()
-            return
+            time_wait = 0
+            while (time_wait < 1):
+                if (self.emergency_stop):
+                    self.stop_the_arms_movement()
+                    return
+                time.sleep(0.1)
+                time_wait+=0.1
         
         
 
 
 
+     
     def move_motor_pendulum(self, position): 
 
         """
@@ -319,19 +314,18 @@ class PendulumScanner:
         """
 
         motor.set_dps(self.MOTOR_DPS)
+        time_wait = 0
         if (self.emergency_stop):
                 self.stop_the_arms_movement()
                 return
         motor.set_position(0)
-        if (self.emergency_stop):
+
+        while (time_wait < 1):
+            if (self.emergency_stop):
                 self.stop_the_arms_movement()
                 return
-        time.sleep(1)
-        if (self.emergency_stop):
-                self.stop_the_arms_movement()
-                return
-
-
+            time.sleep(0.1)
+            time_wait+=0.1
 
         motor.set_dps(0)
 
