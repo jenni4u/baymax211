@@ -8,10 +8,10 @@ class PendulumScanner:
     #----------- CONSTANTS -----------#
     INITIAL_POSITION = 0
     # The motor_block moves more than the motor_color_arm so its pendulum movement will be less (from -40 to 40)
-    LEFT_POSITION = -45
+    LEFT_POSITION = -50
     LEFT_POSITION_2 = -45
     RIGHT_POSITION = 45
-    RIGHT_POSITION_2 = 45
+    RIGHT_POSITION_2 = 50
 
     MOTOR_DPS = 150
     TIME_SLEEP = 1.5
@@ -130,7 +130,8 @@ class PendulumScanner:
         # -------- MOVEMENT LEFT/RIGHT WITH EMERGENCY CHECKS -------- #
 
         if (position == "right"):
-            motor.set_position(self.get_pos(motor) + left)
+            #motor.set_position(self.get_pos(motor) + left)
+            motor.set_position(left)
 
             for _ in range(100):
                 if self.stopped_color_detection or self.emergency_stop:
@@ -140,7 +141,7 @@ class PendulumScanner:
 
   
         if (position == "left"):
-            motor.set_position(self.get_pos(motor) + right)
+            motor.set_position(right)
 
             for _ in range(100):
                 if self.stopped_color_detection or self.emergency_stop:

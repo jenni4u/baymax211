@@ -1,4 +1,4 @@
-from utils.brick import EV3ColorSensor, TouchSensor, Motor, BP, wait_ready_sensors
+from utils.brick import EV3ColorSensor, TouchSensor, Motor, BP, wait_ready_sensors, reset_brick
 import math
 import time
 from pendulum_mvt_wiss import PendulumScanner
@@ -8,7 +8,7 @@ class RobotScannerOfRoom:
     RADIUS = 2
     DISTTODEG = 360 / (2 * math.pi * RADIUS)
     DPS = 50
-    MAX_ROOM_DISTANCE = 22
+    MAX_ROOM_DISTANCE = 19
     DISTANCE_PER_SCANNING = 2.8 / 2
     DISTANCE_ENTER = 9
 
@@ -73,16 +73,25 @@ class RobotScannerOfRoom:
         self.stop_all_motors()
 
         # Move color arm to drop position
-        initial_angle = self.scanner.motor_color_sensor.get_position()
-        angle_movement = 30 if delivery_counter == 0 else 50
-        drop_angle = initial_angle + angle_movement if initial_angle < 0 else initial_angle - angle_movement
+        initial_angle = self.motor_color_sensor.get_position()
+        drop_angle = 0
+        
+        if delivery_counter == 0:
+            angle_movement = 31
+        else:
+            angle_movement = 50
+            
+        if initial_angle < 0:
+            drop_angle = initial_angle + angle_movement
+        else:
+            drop_angle = initial_angle - angle_movement
 
 
 
         # Return arm to initial angle
-        self.scanner.motor_color_sensor.set_dps(50)
-        self.scanner.motor_color_sensor.set_position(initial_angle)
-        time.sleep(1.5)
+        self.scanner.motor_color_sensor.set_dps(20)
+        self.scanner.motor_color_sensor.set_position(drop_angle)
+        time.sleep(2)
         self.scanner.motor_color_sensor.set_dps(0)
 
         # Reset both arms
@@ -107,8 +116,8 @@ class RobotScannerOfRoom:
         try:
             # --- BACKUP UNTIL ORANGE DETECTED 5 TIMES ---
             count_orange = 0
-            self.RIGHT_WHEEL.set_dps(-150)  # move backward
-            self.LEFT_WHEEL.set_dps(-150)
+            self.RIGHT_WHEEL.set_dps(150)  # move backward
+            self.LEFT_WHEEL.set_dps(150)
 
             while count_orange < 5 and not self.emergency_stop:
                 try:
@@ -125,6 +134,7 @@ class RobotScannerOfRoom:
             # Stop wheels once orange detected 5 times
             self.RIGHT_WHEEL.set_dps(0)
             self.LEFT_WHEEL.set_dps(0)
+            self.LEFT_WHEEL.set_position_relative(-1*self.DISTTODEG)
 
             # --- PROCEED WITH ROOM SCANNING ---
             while True:
@@ -145,7 +155,11 @@ class RobotScannerOfRoom:
 
                 # Scan width
                 color = self.scanner.main_pendulum(position)
-                position = "right" if position == "left" else "left"
+                if position == "right":
+                    position = "left"
+                else:
+                    position = "right"
+                
 
                 if self.emergency_stop:
                     self.stop_all_motors()
@@ -177,6 +191,7 @@ COLOR_SENSOR = EV3ColorSensor(3)
 LEFT_WHEEL = Motor("B")
 RIGHT_WHEEL = Motor("C")
 scanner = RobotScannerOfRoom(motor_color_sensor, motor_block, COLOR_SENSOR, RIGHT_WHEEL, LEFT_WHEEL)
+wait_ready_sensors()
 
 def emergency_stop_monitor():
     """Monitor touch sensor for emergency stop signal."""
@@ -194,8 +209,9 @@ def emergency_stop_monitor():
 
             # Stop wheels and arm motors
             scanner.stop_all_motors()
+            reset_brick()
 
-            BP.reset_all()
+          
             break
 
         time.sleep(0.05)
@@ -203,4 +219,4 @@ def emergency_stop_monitor():
 if __name__ == "__main__":
     stop_thread = threading.Thread(target=emergency_stop_monitor, daemon=True)
     stop_thread.start()
-    scanner.scan_room(1)
+    scanner.scan_room(0)
