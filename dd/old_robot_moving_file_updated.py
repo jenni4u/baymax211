@@ -1,4 +1,4 @@
-from utils.brick import Motor, BP, wait_ready_sensors, TouchSensor
+from utils.brick import Motor, BP, wait_ready_sensors, TouchSensor, reset_brick
 import math
 import time
 import old_pendulum_file_updated as pendulum_mvt
@@ -31,6 +31,8 @@ LEFT_WHEEL.reset_encoder()
 def wheels_stop():
     RIGHT_WHEEL.set_dps(0)
     LEFT_WHEEL.set_dps(0)
+    pendulum_mvt.motor_block.set_dps(0)
+    pendulum_mvt.motor_color_sensor.set_dps(0)
 
 def emergency_triggered():
     return pendulum_mvt.emergency_stop  # use pendulum’s global flag
@@ -40,7 +42,7 @@ def safe_sleep(t):
     for _ in range(int(t * 20)):
         if emergency_triggered():
             wheels_stop()
-            pendulum_mvt.stop_all_arms()
+            pendulum_mvt.emergency_stop_arms()
             return
         time.sleep(0.05)
 
@@ -50,7 +52,7 @@ def move_robot(distance, dps):
     ### EMERGENCY
     if emergency_triggered():
         wheels_stop()
-        pendulum_mvt.stop_all_arms()
+        pendulum_mvt.emergency_stop_arms()
         return
 
     RIGHT_WHEEL.set_dps(dps)
@@ -63,7 +65,7 @@ def move_robot(distance, dps):
     for _ in range(40):
         if emergency_triggered():
             wheels_stop()
-            pendulum_mvt.stop_all_arms()
+            pendulum_mvt.emergency_stop_arms()
             return
         time.sleep(0.05)
 
@@ -74,7 +76,7 @@ def move_back_after_scanning(total_distance):
 
     ### EMERGENCY
     if emergency_triggered():
-        pendulum_mvt.stop_all_arms()
+        pendulum_mvt.emergency_stop_arms()
         return
 
     pendulum_mvt.reset_both_motors_to_initial_position()
@@ -91,7 +93,7 @@ def package_delivery(total_distance, delivery_counter):
     ### EMERGENCY
     if emergency_triggered():
         wheels_stop()
-        pendulum_mvt.stop_all_arms()
+        pendulum_mvt.emergency_stop_arms()
         return
 
     drop_angle = 0
@@ -112,7 +114,7 @@ def package_delivery(total_distance, delivery_counter):
     safe_sleep(2.5)
 
     if emergency_triggered():
-        pendulum_mvt.stop_all_arms()
+        pendulum_mvt.emergency_stop_arms()
         return
 
     pendulum_mvt.motor_color_sensor.set_dps(0)
@@ -175,7 +177,7 @@ def scan_room(delivery_counter):
             ### EMERGENCY
             if emergency_triggered():
                 wheels_stop()
-                pendulum_mvt.stop_all_arms()
+                pendulum_mvt.emergency_stop_arms()
                 break
 
             if total_distance >= MAX_ROOM_DISTANCE:
@@ -195,7 +197,7 @@ def scan_room(delivery_counter):
                 position = "left"
             else:
                 position = "right"
-
+            
             if color == "red":
                 wheels_stop()
                 safe_sleep(1.5)
@@ -225,7 +227,8 @@ def monitor_touch_sensor():
             pendulum_mvt.emergency_stop = True
             # Your helper function will handle stopping wheels and pendulum
             wheels_stop()            # stops the wheels
-            pendulum_mvt.emergency_stop()  # stops both pendulum motors
+            pendulum_mvt.emergency_stop_arms()  # stops both pendulum motors
+            reset_brick()
             break
         time.sleep(0.05)
 

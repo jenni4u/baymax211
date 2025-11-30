@@ -15,6 +15,13 @@ TIME_SLEEP = 1.5
 COLOR_SENSOR = EV3ColorSensor(3)
 TOUCH_SENSOR = TouchSensor(4)
 
+#------------- SETUP -------------#
+motor_color_sensor = Motor("A") 
+motor_block = Motor("D")  
+wait_ready_sensors()
+motor_color_sensor.reset_encoder()
+motor_block.reset_encoder()
+
 
 # COLOR CLASSIFICATION
 color_detection_algorithm = ColorDetectionAlgorithm()
@@ -25,12 +32,6 @@ emergency_stop = False
 stopped_motor_block = False
 stopped_motor_color_sensor = False
 
-
-motor_color_sensor = Motor("A")
-motor_block = Motor("D")
-wait_ready_sensors()
-motor_color_sensor.reset_encoder()
-motor_block.reset_encoder()
 
 
 #============================================================
@@ -94,7 +95,7 @@ def color_sample():
 
             if count_green >= 5:
                 stop_the_arms_movement("green")
-                playsound("sounds/balalala.wav")
+                sounds_utils.play_wav("balalala.wav")
                 return "green"
 
             if count_red >= 5:
@@ -110,7 +111,7 @@ def color_sample():
 #============================================================
 # MOTOR MOVEMENT (INTERRUPTIBLE)
 #============================================================
-def move_motor(motor, position=None):
+def move_motor(motor, position):
     global stopped_color_detection, emergency_stop
 
     print("System is Ready!")
@@ -127,68 +128,78 @@ def move_motor(motor, position=None):
         return
 
     if position == "right":
-        target = LEFT_POSITION
-        motor.set_position(target)
+        
+        motor.set_position(LEFT_POSITION)
+        
+        for _ in range(100):
+                if stopped_color_detection or emergency_stop:
+                    motor.set_dps(0)
+                    return
+                time.sleep(0.01)
 
         # INTERRUPTIBLE wait
-        while abs(motor.get_position() - target) > 3:
-            if emergency_stop or stopped_color_detection:
-                motor.set_dps(0)
-                return
-            time.sleep(0.01)
+#         while abs(motor.get_position() - target) > 3:
+#             if emergency_stop or stopped_color_detection:
+#                 motor.set_dps(0)
+#                 return
+#             time.sleep(0.01)
 
-    elif position == "left":
-        target = RIGHT_POSITION
-        motor.set_position(target)
+    if position == "left":
+        
+        motor.set_position(RIGHT_POSITION)
+        
+        for _ in range(100):
+                if stopped_color_detection or emergency_stop:
+                    motor.set_dps(0)
+                    return
+                time.sleep(0.01)
+    
+    
 
         # INTERRUPTIBLE wait
-        while abs(motor.get_position() - target) > 3:
-            if emergency_stop or stopped_color_detection:
-                motor.set_dps(0)
-                return
-            time.sleep(0.01)
+#         while abs(motor.get_position() - target) > 3:
+#             if emergency_stop or stopped_color_detection:
+#                 motor.set_dps(0)
+#                 return
+#             time.sleep(0.01)
 
 
 #============================================================
 # PENDULUM ARM
 #============================================================
-def move_motor_pendulum():
+def move_motor_pendulum(position):
     global stopped_motor_color_sensor
 
     if emergency_stop:
         motor_color_sensor.set_dps(0)
         return
 
-    move_motor(motor_color_sensor, "right")
-    move_motor(motor_color_sensor, "left")
+    move_motor(motor_color_sensor, position)
 
     motor_color_sensor.set_dps(0)
-    stopped_motor_color_sensor = True
+    #stopped_motor_color_sensor = True
 
 
 #============================================================
 # BLOCK ARM
 #============================================================
-def move_motor_block():
+def move_motor_block(position):
     global stopped_motor_block
 
     if emergency_stop:
         motor_block.set_dps(0)
         return
 
-    print("System is Ready!")
-
-    move_motor(motor_block, "right")
-    move_motor(motor_block, "left")
+    move_motor(motor_block, position)
 
     motor_block.set_dps(0)
-    stopped_motor_block = True
+    #stopped_motor_block = True
 
 
 #============================================================
 # RUN ALL THREADS TOGETHER
 #============================================================
-def main_pendulum():
+def main_pendulum(position):
     global detected_color, emergency_stop
     global stopped_color_detection, stopped_motor_block, stopped_motor_color_sensor
 
@@ -200,8 +211,8 @@ def main_pendulum():
 
     try:
         color_thread = threading.Thread(target=color_sample)
-        pendulum_thread = threading.Thread(target=move_motor_pendulum)
-        block_thread = threading.Thread(target=move_motor_block)
+        pendulum_thread = threading.Thread(target=move_motor_pendulum, args=(position,))
+        block_thread = threading.Thread(target=move_motor_block, args=(position,))
 
         color_thread.start()
         pendulum_thread.start()
