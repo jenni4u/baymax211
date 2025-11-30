@@ -3,7 +3,7 @@ from brickpi3 import SensorError
 from color_detection_algorithm import ColorDetectionAlgorithm
 import time
 import threading
-from playsound3 import playsound
+import sounds_utils
 
 
 #----------- CONSTANTS -----------#
@@ -12,15 +12,15 @@ LEFT_POSITION = -45
 RIGHT_POSITION = 45
 MOTOR_DPS = 150
 TIME_SLEEP = 1.5
-COLOR_SENSOR = EV3ColorSensor(3)
-TOUCH_SENSOR = TouchSensor(4)
+color_sensor = EV3ColorSensor(3)
+touch_sensor = TouchSensor(4)
 
 #------------- SETUP -------------#
-motor_color_sensor = Motor("A") 
-motor_block = Motor("D")  
+scanner_motor = Motor("A") 
+drop_motor = Motor("D")  
 wait_ready_sensors()
-motor_color_sensor.reset_encoder()
-motor_block.reset_encoder()
+scanner_motor.reset_encoder()
+drop_motor.reset_encoder()
 
 
 # COLOR CLASSIFICATION
@@ -29,8 +29,8 @@ color_detection_algorithm = ColorDetectionAlgorithm()
 
 #------------- GLOBAL CONTROL FLAGS -------------#
 emergency_stop = False
-stopped_motor_block = False
-stopped_motor_color_sensor = False
+stopped_drop_motor = False
+stopped_scanner_motor = False
 
 
 
@@ -38,21 +38,21 @@ stopped_motor_color_sensor = False
 # STOP LOGIC
 #============================================================
 def stop_the_arms_movement(color):
-    global detected_color, stopped_color_detection, emergency_stop
+    global detected_color, stopped_color_detection
 
     detected_color = color
     stopped_color_detection = True
-    emergency_stop = True
 
-    motor_color_sensor.set_dps(0)
-    motor_block.set_dps(0)
+
+    scanner_motor.set_dps(0)
+    drop_motor.set_dps(0)
 
 
 def emergency_stop_arms():
     global emergency_stop
     emergency_stop = True
-    motor_color_sensor.set_dps(0)
-    motor_block.set_dps(0)
+    scanner_motor.set_dps(0)
+    drop_motor.set_dps(0)
 
 
 #============================================================
@@ -66,41 +66,45 @@ def color_sample():
 
     while (not emergency_stop
            and not stopped_color_detection
-           and not stopped_motor_block
-           and not stopped_motor_color_sensor):
+           and not stopped_drop_motor
+           and not stopped_scanner_motor):
 
         if emergency_stop:
-            motor_color_sensor.set_dps(0)
-            motor_block.set_dps(0)
+            scanner_motor.set_dps(0)
+            drop_motor.set_dps(0)
             return None
 
         try:
-            values = COLOR_SENSOR.get_value()
-            if not values:
-                continue
+            values = color_sensor.get_value()
+            if values:
 
-            R, G, B, L = values
-            color = color_detection_algorithm.classify_the_color(R, G, B)
-            print(color)
+                # Classify the color
+                R, G, B, L = values
+                color = color_detection_algorithm.classify_the_color(R, G, B)
+                print(color)
 
-            if color == "green":
-                count_green += 1
-                count_red = 0
-            elif color == "red":
-                count_red += 1
-                count_green = 0
-            else:
-                count_green = 0
-                count_red = 0
+                if color == "green":
+                    count_green += 1
+                    count_red = 0
+                elif color == "red":
+                    count_red += 1
+                    count_green = 0
+                else:
+                    count_green = 0
+                    count_red = 0
 
-            if count_green >= 5:
-                stop_the_arms_movement("green")
-                sounds_utils.play_wav("balalala.wav")
-                return "green"
+                if count_green >= 5:
+                    color="green"
+                    stop_the_arms_movement(color)
+                    sounds_utils.play_wav("balalala.wav")
+                else:
+                    color = None
 
-            if count_red >= 5:
-                stop_the_arms_movement("red")
-                return "red"
+                if count_red >= 5:
+                    color = "red"
+                    stop_the_arms_movement(color)
+                else:
+                    color = None
 
         except SensorError:
             print("Color sensor read error")
@@ -137,13 +141,6 @@ def move_motor(motor, position):
                     return
                 time.sleep(0.01)
 
-        # INTERRUPTIBLE wait
-#         while abs(motor.get_position() - target) > 3:
-#             if emergency_stop or stopped_color_detection:
-#                 motor.set_dps(0)
-#                 return
-#             time.sleep(0.01)
-
     if position == "left":
         
         motor.set_position(RIGHT_POSITION)
@@ -156,44 +153,37 @@ def move_motor(motor, position):
     
     
 
-        # INTERRUPTIBLE wait
-#         while abs(motor.get_position() - target) > 3:
-#             if emergency_stop or stopped_color_detection:
-#                 motor.set_dps(0)
-#                 return
-#             time.sleep(0.01)
-
 
 #============================================================
 # PENDULUM ARM
 #============================================================
 def move_motor_pendulum(position):
-    global stopped_motor_color_sensor
+    global stopped_scanner_motor
 
     if emergency_stop:
-        motor_color_sensor.set_dps(0)
+        scanner_motor.set_dps(0)
         return
 
-    move_motor(motor_color_sensor, position)
+    move_motor(scanner_motor, position)
 
-    motor_color_sensor.set_dps(0)
-    #stopped_motor_color_sensor = True
+    scanner_motor.set_dps(0)
+    stopped_scanner_motor = True
 
 
 #============================================================
 # BLOCK ARM
 #============================================================
-def move_motor_block(position):
-    global stopped_motor_block
+def move_drop_motor(position):
+    global stopped_drop_motor
 
     if emergency_stop:
-        motor_block.set_dps(0)
+        drop_motor.set_dps(0)
         return
 
-    move_motor(motor_block, position)
+    move_motor(drop_motor, position)
 
-    motor_block.set_dps(0)
-    #stopped_motor_block = True
+    drop_motor.set_dps(0)
+    stopped_drop_motor = True
 
 
 #============================================================
@@ -201,18 +191,18 @@ def move_motor_block(position):
 #============================================================
 def main_pendulum(position):
     global detected_color, emergency_stop
-    global stopped_color_detection, stopped_motor_block, stopped_motor_color_sensor
+    global stopped_color_detection, stopped_drop_motor, stopped_scanner_motor
 
     detected_color = None
     stopped_color_detection = False
-    stopped_motor_block = False
-    stopped_motor_color_sensor = False
+    stopped_drop_motor = False
+    stopped_scanner_motor = False
     emergency_stop = False
 
     try:
         color_thread = threading.Thread(target=color_sample)
         pendulum_thread = threading.Thread(target=move_motor_pendulum, args=(position,))
-        block_thread = threading.Thread(target=move_motor_block, args=(position,))
+        block_thread = threading.Thread(target=move_drop_motor, args=(position,))
 
         color_thread.start()
         pendulum_thread.start()
@@ -243,11 +233,13 @@ def reset_motor_to_initial_position(motor):
     motor.set_position(INITIAL_POSITION)
 
     # INTERRUPTIBLE wait
-    while abs(motor.get_position() - INITIAL_POSITION) > 3:
-        if emergency_stop:
+    for _ in range(100):
+        if stopped_color_detection or emergency_stop:
             motor.set_dps(0)
             return
         time.sleep(0.01)
+                
+ 
 
     motor.set_dps(0)
 
@@ -256,12 +248,12 @@ def reset_both_motors_to_initial_position():
     global emergency_stop
 
     if emergency_stop:
-        motor_color_sensor.set_dps(0)
-        motor_block.set_dps(0)
+        scanner_motor.set_dps(0)
+        drop_motor.set_dps(0)
         return
 
-    t1 = threading.Thread(target=reset_motor_to_initial_position, args=(motor_color_sensor,))
-    t2 = threading.Thread(target=reset_motor_to_initial_position, args=(motor_block,))
+    t1 = threading.Thread(target=reset_motor_to_initial_position, args=(scanner_motor,))
+    t2 = threading.Thread(target=reset_motor_to_initial_position, args=(drop_motor,))
 
     t1.start()
     t2.start()
@@ -269,8 +261,8 @@ def reset_both_motors_to_initial_position():
     # INTERRUPTIBLE wait for both
     while t1.is_alive() or t2.is_alive():
         if emergency_stop:
-            motor_color_sensor.set_dps(0)
-            motor_block.set_dps(0)
+            scanner_motor.set_dps(0)
+            drop_motor.set_dps(0)
             return
         time.sleep(0.01)
 
@@ -280,4 +272,4 @@ def reset_both_motors_to_initial_position():
 
 #============================================================
 if __name__ == "__main__":
-    main_pendulum()
+    main_pendulum("left")

@@ -10,29 +10,29 @@ DISTTODEG = 360 / (2 * math.pi * RADIUS)
 
 #-------- CONSTANTS -----------#
 DPS = 50
-MAX_ROOM_DISTANCE = 22
+MAX_ROOM_DISTANCE = 19
 DISTANCE_PER_SCANNING = 2.8/2
 DISTANCE_ENTER = 9
 
 #------------- SETUP -------------#
 emergency_stop = False
-RIGHT_WHEEL = Motor("C")
-LEFT_WHEEL = Motor("B")
-TOUCH_SENSOR = TouchSensor(4)
+right_motor = Motor("C")
+left_motor = Motor("B")
+touch_sensor = TouchSensor(4)
 wait_ready_sensors()
-pendulum_mvt.motor_color_sensor.reset_encoder()
-pendulum_mvt.motor_block.reset_encoder()
-RIGHT_WHEEL.reset_encoder()
-LEFT_WHEEL.reset_encoder()
+pendulum_mvt.scanner_motor.reset_encoder()
+pendulum_mvt.drop_motor.reset_encoder()
+right_motor.reset_encoder()
+left_motor.reset_encoder()
 
 # ============================================
 # EMERGENCY STOP HELPERS  (MINIMAL ADDITIONS)
 # ============================================
 def wheels_stop():
-    RIGHT_WHEEL.set_dps(0)
-    LEFT_WHEEL.set_dps(0)
-    pendulum_mvt.motor_block.set_dps(0)
-    pendulum_mvt.motor_color_sensor.set_dps(0)
+    right_motor.set_dps(0)
+    left_motor.set_dps(0)
+    pendulum_mvt.drop_motor.set_dps(0)
+    pendulum_mvt.scanner_motor.set_dps(0)
 
 def emergency_triggered():
     return pendulum_mvt.emergency_stop  # use pendulum’s global flag
@@ -55,19 +55,11 @@ def move_robot(distance, dps):
         pendulum_mvt.emergency_stop_arms()
         return
 
-    RIGHT_WHEEL.set_dps(dps)
-    LEFT_WHEEL.set_dps(dps)
+    right_motor.set_dps(dps)
+    left_motor.set_dps(dps)
 
-    LEFT_WHEEL.set_position_relative(-distance * DISTTODEG)
-    RIGHT_WHEEL.set_position_relative(-distance * DISTTODEG)
-
-    ### EMERGENCY DURING MOTION
-    for _ in range(40):
-        if emergency_triggered():
-            wheels_stop()
-            pendulum_mvt.emergency_stop_arms()
-            return
-        time.sleep(0.05)
+    left_motor.set_position_relative(-distance * DISTTODEG)
+    right_motor.set_position_relative(-distance * DISTTODEG)
 
 
 def move_back_after_scanning(total_distance):
@@ -97,7 +89,7 @@ def package_delivery(total_distance, delivery_counter):
         return
 
     drop_angle = 0
-    initial_color_angle = pendulum_mvt.motor_color_sensor.get_position()
+    initial_color_angle = pendulum_mvt.scanner_motor.get_position()
 
     if delivery_counter == 0:
         angle_movement = 30
@@ -109,21 +101,21 @@ def package_delivery(total_distance, delivery_counter):
     else:
         drop_angle = initial_color_angle - angle_movement
 
-    pendulum_mvt.motor_color_sensor.set_dps(50)
-    pendulum_mvt.motor_color_sensor.set_position(drop_angle)
+    pendulum_mvt.scanner_motor.set_dps(50)
+    pendulum_mvt.scanner_motor.set_position(drop_angle)
     safe_sleep(2.5)
 
     if emergency_triggered():
         pendulum_mvt.emergency_stop_arms()
         return
 
-    pendulum_mvt.motor_color_sensor.set_dps(0)
+    pendulum_mvt.scanner_motor.set_dps(0)
 
-    pendulum_mvt.motor_color_sensor.set_dps(pendulum_mvt.MOTOR_DPS - 100)
-    pendulum_mvt.motor_color_sensor.set_position(initial_color_angle)
+    pendulum_mvt.scanner_motor.set_dps(50)
+    pendulum_mvt.scanner_motor.set_position(initial_color_angle)
     safe_sleep(1.5)
 
-    pendulum_mvt.motor_color_sensor.set_dps(0)
+    pendulum_mvt.scanner_motor.set_dps(0)
 
     pendulum_mvt.reset_both_motors_to_initial_position()
     safe_sleep(1)
@@ -145,23 +137,24 @@ def scan_room(delivery_counter):
 
     total_distance = 0
     wheels_stop()
-    LEFT_WHEEL.set_position_relative(0)
-    RIGHT_WHEEL.set_position_relative(0)
+    left_motor.set_position_relative(0)
+    right_motor.set_position_relative(0)
     time.sleep(0.05)
 
     position = "left"
 
     try:
         count_orange = 0
-        RIGHT_WHEEL.set_dps(150)
-        LEFT_WHEEL.set_dps(150)
+        right_motor.set_dps(150)
+        left_motor.set_dps(150)
 
-        while count_orange < 5 and not emergency_triggered():
+        while count_orange < 3 and not emergency_triggered():
 
             try:
-                R, G, B, L = pendulum_mvt.COLOR_SENSOR.get_value()
+                R, G, B, L = pendulum_mvt.color_sensor.get_value()
                 color = pendulum_mvt.color_detection_algorithm.classify_the_color(R, G, B)
                 if color == "orange":
+                    print(color)
                     count_orange += 1
                 else:
                     count_orange = 0
@@ -178,18 +171,21 @@ def scan_room(delivery_counter):
             if emergency_triggered():
                 wheels_stop()
                 pendulum_mvt.emergency_stop_arms()
-                break
+                return False
+                
 
             if total_distance >= MAX_ROOM_DISTANCE:
                 move_back_after_scanning(total_distance)
-                break
+                return False
+                
 
             move_robot(DISTANCE_PER_SCANNING, 150)
             total_distance += DISTANCE_PER_SCANNING
             safe_sleep(1.5)
 
             if emergency_triggered():
-                break
+                return False
+                
 
             color = pendulum_mvt.main_pendulum(position)
 
@@ -204,13 +200,15 @@ def scan_room(delivery_counter):
                 pendulum_mvt.reset_both_motors_to_initial_position()
                 safe_sleep(1)
                 move_robot(DISTANCE_ENTER - DISTANCE_PER_SCANNING*3, 150)
-                break
+                return False
+                
 
             elif color == "green":
                 wheels_stop()
                 package_delivery(total_distance, delivery_counter)
                 total_distance = 0
-                break
+                return True 
+                
 
     except BaseException as error:
         print("Error during scan_room:", error)
@@ -219,7 +217,7 @@ def scan_room(delivery_counter):
 def monitor_touch_sensor():
     """Continuously monitor the touch sensor and trigger emergency stop."""
     while True:
-        if TOUCH_SENSOR.is_pressed():
+        if touch_sensor.is_pressed():
             print("TOUCH SENSOR PRESSED! Emergency stop triggered!")
             # Set emergency stop flags
             global emergency_stop

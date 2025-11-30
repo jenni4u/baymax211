@@ -1,6 +1,8 @@
 from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep, TouchSensor, reset_brick
 import return_home as rt
-from robot_moving_in_the_room import RobotScannerOfRoom
+import old_robot_moving_file_updated as robot_scanner
+import old_pendulum_file_updated as pendulum_scanner
+#from robot_moving_in_the_room import RobotScannerOfRoom
 import line_follower as lf
 import threading
 import time
@@ -18,7 +20,7 @@ scanner_motor.reset_encoder()
 drop_motor.set_position(0)
 scanner_motor.set_position(0)
 
-scanner_room = RobotScannerOfRoom(scanner_motor, drop_motor, color_sensor, right_motor, left_motor)
+#scanner_room = RobotScannerOfRoom(scanner_motor, drop_motor, color_sensor, right_motor, left_motor)
 color_sensor.set_mode("red")
 wait_ready_sensors(True)
 
@@ -41,10 +43,14 @@ def emergency_stop_monitor():
             if touch_sensor.is_pressed():
                 print("\n*** EMERGENCY STOP ACTIVATED ***")
                 lf.emergency_stop = True
-                scanner_room.emergency_stop = True
-                scanner_room.scanner.emergency_stop = True
-                scanner_room.stop()
-                scanner_room.scanner.stop_the_arms_movement()
+
+                
+                robot_scanner.emergency_stop = True
+                pendulum_scanner.emergency_stop = True
+                robot_scanner.wheels_stop()            # stops the wheels
+                pendulum_scanner.emergency_stop_arms()  # stops both pendulum motors
+
+
                 lf.stop()
                 BP.reset_all()
                 reset_brick()
@@ -86,17 +92,17 @@ if __name__ == "__main__":
             if lf.emergency_stop:
                     break
                 
-            # color_sensor.set_mode("component")
-            # wait_ready_sensors(True)
+            color_sensor.set_mode("component")
+            wait_ready_sensors(True)
             
-            # scanner_room.scanner.reset_both_motors_to_initial_position()
-            # if scanner_room.scan_room(delivery_counter):
-            #     print("did the scanning")
-            #     delivery_counter += 1
-            #     print(f"Delivery successful! Total deliveries: {delivery_counter}")
-            # time.sleep(4)
-            # color_sensor.set_mode("red")
-            # wait_ready_sensors(True)
+            pendulum_scanner.reset_both_motors_to_initial_position()
+            if robot_scanner.scan_room(delivery_counter):
+                print("did the scanning")
+                delivery_counter += 1
+                print(f"Delivery successful! Total deliveries: {delivery_counter}")
+            time.sleep(3)
+            color_sensor.set_mode("red")
+            wait_ready_sensors(True)
             
             lf.undo_turn_room(left_motor, right_motor)
             lf.line_follower_distance(4, -1.8, left_motor, right_motor, color_sensor, -80, 24) #aggressive correction
