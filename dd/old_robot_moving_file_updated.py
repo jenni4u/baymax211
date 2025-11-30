@@ -225,7 +225,7 @@ def monitor_touch_sensor():
             pendulum_mvt.emergency_stop = True
             # Your helper function will handle stopping wheels and pendulum
             wheels_stop()            # stops the wheels
-            pendulum_mvt.stop_all_arms()  # stops both pendulum motors
+            pendulum_mvt.emergency_stop()  # stops both pendulum motors
             break
         time.sleep(0.05)
 
