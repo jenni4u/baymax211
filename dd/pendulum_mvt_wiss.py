@@ -45,12 +45,15 @@ class PendulumScanner:
     #---------- COLOR CLASSIFICATION ----------#
     def stop_the_arms_movement(self, color):
 
+          # Stop motors
+        self.motor_color_sensor.set_dps(0)
+        self.motor_block.set_dps(0)
+
+        time.sleep(0.1)
         self.detected_color = color
         self.stopped_color_detection = True
 
-        # Stop motors
-        self.motor_color_sensor.set_dps(0)
-        self.motor_block.set_dps(0)
+    
 
         # --- REQUIRED FOR EMERGENCY STOP ---
         self.stopped_motor_color_sensor = True
