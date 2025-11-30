@@ -77,7 +77,7 @@ class RobotScannerOfRoom:
         drop_angle = 0
         
         if delivery_counter == 0:
-            angle_movement = 31
+            angle_movement = 30
         else:
             angle_movement = 50
             
@@ -91,7 +91,7 @@ class RobotScannerOfRoom:
         # Return arm to initial angle
         self.scanner.motor_color_sensor.set_dps(20)
         self.scanner.motor_color_sensor.set_position(drop_angle)
-        time.sleep(2)
+        time.sleep(3)
         self.scanner.motor_color_sensor.set_dps(0)
 
         # Reset both arms
@@ -112,6 +112,7 @@ class RobotScannerOfRoom:
     def scan_room(self, delivery_counter):
         total_distance = 0
         position = "left"
+        
 
         try:
             # --- BACKUP UNTIL ORANGE DETECTED 5 TIMES ---

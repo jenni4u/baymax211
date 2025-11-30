@@ -78,18 +78,21 @@ class PendulumScanner:
                     color = self.color_detection_algorithm.classify_the_color(R, G, B)
                     print(color)
 
-                    if color == "green":
+                    if color == "green" and count_green < 5:
                         count_green += 1
                         print(count_green)
                         count_red = 0
 
-                    elif color == "red":
+                    elif color == "red"and count_red < 5:
                         count_red += 1
                         count_green = 0
 
                     else:
                         count_green = 0
                         count_red = 0
+                    if self.emergency_stop:
+                        self.stop_the_arms_movement("emergency")
+                        return "emergency"
 
                     if count_green >= 5:
                         self.stop_the_arms_movement("green")
@@ -102,6 +105,7 @@ class PendulumScanner:
 
             except SensorError:
                 print("Color sensor read error")
+            time.sleep(0.01)
 
         return None
              
@@ -130,8 +134,8 @@ class PendulumScanner:
         # -------- MOVEMENT LEFT/RIGHT WITH EMERGENCY CHECKS -------- #
 
         if (position == "right"):
-            #motor.set_position(self.get_pos(motor) + left)
-            motor.set_position(left)
+            motor.set_position(self.get_pos(motor) + left)
+            
 
             for _ in range(100):
                 if self.stopped_color_detection or self.emergency_stop:
@@ -141,7 +145,8 @@ class PendulumScanner:
 
   
         if (position == "left"):
-            motor.set_position(right)
+            #motor.set_position(right)
+            motor.set_position(self.get_pos(motor) + right)
 
             for _ in range(100):
                 if self.stopped_color_detection or self.emergency_stop:
@@ -197,10 +202,10 @@ class PendulumScanner:
 
     #----------- RESET ----------- #
     def reset_motor_to_initial_position(self, motor):
-        motor.set_dps(self.MOTOR_DPS)
+        motor.set_dps(30)
         motor.set_position(0)
         start_time = time.time()
-        while time.time() - start_time < 1:
+        while time.time() - start_time < 1.5:
             if self.emergency_stop:
                 self.stop_the_arms_movement("emergency")
                 return
