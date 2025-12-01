@@ -11,9 +11,6 @@ color_sensor = EV3ColorSensor(3, mode="red")
 touch_sensor = TouchSensor(4)  
 wait_ready_sensors(True)
 
-# Global emergency stop flag
-emergency_stop = False
-
 # INTERSECTION PATTERN
 ROOM = 0     # Meeting Room
 ST_ROOM = 1  # Storage Room
@@ -26,13 +23,12 @@ INTERSECTION_PATTERN = [ROOM, ST_ROOM, ROOM,
 
 def emergency_stop_monitor():
     """Monitor touch sensor for emergency stop signal."""
-    global emergency_stop
     print("Emergency stop monitor started. Press touch sensor to stop.")
-    while not emergency_stop:
+    while not lf.emergency_stop:
         try:
             if touch_sensor.is_pressed():
                 print("\n*** EMERGENCY STOP ACTIVATED ***")
-                emergency_stop = True
+                lf.emergency_stop = True
                 lf.stop()
                 reset_brick()
                 break
@@ -54,14 +50,14 @@ if __name__ == "__main__":
     try:
         for i in range(len(INTERSECTION_PATTERN)):
             # Check emergency stop before each action
-            if emergency_stop:
+            if lf.emergency_stop:
                 print("Operation cancelled due to emergency stop.")
                 break
 
             # move until next intersection
             lf.line_follower(left_motor=left_motor, right_motor=right_motor, color_sensor=color_sensor)
             
-            if emergency_stop:
+            if lf.emergency_stop:
                 break
 
             if INTERSECTION_PATTERN[i] == ROOM:
@@ -70,7 +66,7 @@ if __name__ == "__main__":
                 # enter and scan room
                 lf.turn_room(left_motor, right_motor)
                 
-                if emergency_stop:
+                if lf.emergency_stop:
                     break
                 
                 #TODO: add room scanning function here, have it return True upon successful delivery
@@ -80,7 +76,7 @@ if __name__ == "__main__":
                 
                 lf.undo_turn_room(left_motor, right_motor)
                 
-                if emergency_stop:
+                if lf.emergency_stop:
                     break
                 
                 # update room number
@@ -100,7 +96,7 @@ if __name__ == "__main__":
                 print("At new edge, smooth turning left")
                 lf.smooth_turn(left_motor, right_motor)
                 
-                if emergency_stop:
+                if lf.emergency_stop:
                     break
 
             elif INTERSECTION_PATTERN[i] == ST_ROOM:
@@ -109,17 +105,17 @@ if __name__ == "__main__":
     
     except KeyboardInterrupt:
         print("\nProgram interrupted by user.")
-        emergency_stop = True
+        lf.emergency_stop = True
         lf.stop()
         reset_brick()
     except Exception as e:
         print(f"\nError occurred: {e}")
-        emergency_stop = True
+        lf.emergency_stop = True
         lf.stop()
         reset_brick()
     finally:
         print("Program ended.")
-        if not emergency_stop:
+        if not lf.emergency_stop:
             reset_brick()
 
 
