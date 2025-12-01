@@ -130,7 +130,7 @@ def package_delivery(total_distance, delivery_counter):
     else:
         move_robot(-remaining, 150)
 
-    safe_sleep(1)
+    safe_sleep(0.05 + remaining * DISTTODEG / 150)
 
 
 def scan_room(delivery_counter):
@@ -181,7 +181,7 @@ def scan_room(delivery_counter):
 
             move_robot(DISTANCE_PER_SCANNING, 150)
             total_distance += DISTANCE_PER_SCANNING
-            safe_sleep(1.5)
+            safe_sleep(0.05 + DISTANCE_PER_SCANNING * DISTTODEG / 150)
 
             if emergency_triggered():
                 return False
