@@ -109,7 +109,7 @@ def move_back_after_scanning(total_distance):
 
     # Then reset the position of both arms at the same time to 0
     pendulum_mvt.reset_both_motors_to_initial_position()
-    safe_sleep(1)
+    safe_sleep(0.8)
 
     # Don't move the robot if emergency_stop was triggered
     if emergency_triggered():
@@ -174,7 +174,7 @@ def package_delivery(total_distance, delivery_counter):
 
     #reset both arms to position 0 at the same time
     pendulum_mvt.reset_both_motors_to_initial_position()
-    safe_sleep(1)
+    safe_sleep(0.8)
 
     # Don't do anything if emergency is triggered
     if emergency_triggered():
@@ -187,7 +187,7 @@ def package_delivery(total_distance, delivery_counter):
     else:
         move_robot(-remaining, 150)
 
-    safe_sleep(1)
+    safe_sleep(0.05 + remaining * DISTTODEG / 150)
 
 
 def scan_room(delivery_counter):
@@ -249,7 +249,7 @@ def scan_room(delivery_counter):
             # It needs to advance of a DISTANCE_PER_SCANNING, wait 1.5 seconds to ensure it finished advancing, 
             move_robot(DISTANCE_PER_SCANNING, 150)
             total_distance += DISTANCE_PER_SCANNING
-            safe_sleep(1.5)
+            safe_sleep(0.05 + DISTANCE_PER_SCANNING * DISTTODEG / 150)
 
             # Don't proceed in the code if emergency stop triggered
             if emergency_triggered():
@@ -269,9 +269,9 @@ def scan_room(delivery_counter):
             # Then move the robot back to 9cm from the orange door
             if color == "red":
                 wheels_stop()
-                safe_sleep(1.5)
+                safe_sleep(0.3)
                 pendulum_mvt.reset_both_motors_to_initial_position()
-                safe_sleep(1)
+                safe_sleep(0.8)
                 move_robot(DISTANCE_ENTER - DISTANCE_PER_SCANNING*3, 150)
                 return False
                 
