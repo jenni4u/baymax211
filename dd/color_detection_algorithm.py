@@ -4,25 +4,26 @@ class ColorDetectionAlgorithm:
 
     #---------- CONSTRUCTOR ----------#
     
-    """
-    Constructor that creates the dictionary of color cluster centers
-    """
+    
     def __init__(self):
+        """
+        Constructor that creates the dictionary of color cluster centers
+        """
         self.clusters = self.create_dictionary_of_clusters()
 
 
     #--- DICTIONARY OF CLUSTER CENTERS  ---#
 
-    """
-    Function that read through all the measurements taken of a specific color and determine the mean normalized RGB values
-
-    Args:
-        filename (String): The file that contains the list of measurements of a specific color
-
-    Returns:
-        float: The mean normalized RGB values for a specific color
-    """
     def find_cluster_of_colored_block(self, filename) :
+        """
+        Function that read through all the measurements taken of a specific color and determine the mean normalized RGB values
+
+        Args:
+            filename (String): The file that contains the list of measurements of a specific color
+
+        Returns:
+            float: The mean normalized RGB values for a specific color
+        """
         red_normalized_total = 0.0
         green_normalized_total = 0.0
         blue_normalized_total = 0.0
@@ -69,14 +70,15 @@ class ColorDetectionAlgorithm:
         return mean_red, mean_green, mean_blue # return the center of the cluster
 
 
-    """
-    Function that creates a dictionary containing the cluster centers of multiple colors (stickers, room, door)
-    The key is the color name and the value is the cluster center
 
-    Returns:
-        dictionary: The dictionary of cluster centers
-    """
     def create_dictionary_of_clusters(self) :
+        """
+        Function that creates a dictionary containing the cluster centers of multiple colors (stickers, room, door)
+        The key is the color name and the value is the cluster center
+
+        Returns:
+            dictionary: The dictionary of cluster centers
+        """
         clusters = {}
 
         # Each file of measurements is located at Color files/ color
@@ -86,32 +88,32 @@ class ColorDetectionAlgorithm:
     
     
     #----------- CLASSIFICATION OF THE COLOR ----------- #
-    """
-    Function that calculates the distance between 2 systems of 3 variables
 
-    Returns:
-        int: The distance calculated
-    """
     def calculate_distance(self, x1, y1, z1, x2, y2, z2) :
+        """
+        Function that calculates the distance between 2 systems of 3 variables
+
+        Returns:
+            int: The distance calculated
+        """
         distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
         return distance 
 
-
-
-    """
-    Function that takes the RGB values of an unknown color, normalize them and calculate the distance between these unknown normalized RGB values
-    and the RGB values of each sampled color contained in the dictionary of cluster centers
-
-    Args:
-        unknown_red (int): The Red value of the unknown color
-        unknown_green (int): The Green value of the unknown color
-        unknown_blue (int): The Blue value of the unknown color
-
-    Returns:
-        String: The dictionary color that has the closest distance to the unknown color
-    """
     
     def classify_the_color(self, unknown_red, unknown_green, unknown_blue) :  
+
+        """
+        Function that takes the RGB values of an unknown color, normalize them and calculate the distance between these unknown normalized RGB values
+        and the RGB values of each sampled color contained in the dictionary of cluster centers
+
+        Args:
+            unknown_red (int): The Red value of the unknown color
+            unknown_green (int): The Green value of the unknown color
+            unknown_blue (int): The Blue value of the unknown color
+
+        Returns:
+            String: The dictionary color that has the closest distance to the unknown color
+        """
         total_unknown =   int(unknown_red) + int(unknown_green) + int(unknown_blue)
         
         if total_unknown == 0:
