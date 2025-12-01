@@ -14,7 +14,7 @@ BACK_SPEED = 100
 TURN_SPEED = -130
 UNDO_TURN_SPEED = -110
 CORRECTION_UNDO_TURN_SPEED = -50
-GET_OUT_OF_ORANGE_TIME = 0.6  # seconds to turn when getting out of orange tile
+GET_OUT_OF_ORANGE_TIME = 1  # seconds to turn when getting out of orange tile
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
 TARGET = 24          # Color sensor is halfway between black and white, at the edge of a line
 TARGET_THRESHOLD = 8   # acceptable error range from target
@@ -262,7 +262,7 @@ def turn_room(left_motor: Motor = LEFT_WHEEL,
     if emergency_stop:
         return
         
-    time_needed = (87 * diameter_axis) / (2 * abs(dps) * radius)
+    time_needed = (86 * diameter_axis) / (2 * abs(dps) * radius)
     stop_time = time.time() + time_needed
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
@@ -319,10 +319,10 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
     print("now looking for black line")
     while get_reflected_light_reading() > (BLACK_THRESHOLD) and not emergency_stop:
         busy_sleep(0.01)
-    dps += 25
+    dps += 30
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
-    while get_reflected_light_reading() < TARGET and not emergency_stop:
+    while get_reflected_light_reading() < (TARGET - 4) and not emergency_stop:
         busy_sleep(0.01)
     stop()
         

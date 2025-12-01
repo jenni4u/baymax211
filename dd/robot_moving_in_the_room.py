@@ -133,7 +133,7 @@ class RobotScannerOfRoom:
         # If the deliver_count is 0 (no block dropped yet), the angle is 30. Else, the robot must move of 50
         angle_movement = 0
         if (delivery_counter == 0):
-            angle_movement = 30
+            angle_movement = 27
         else:
             angle_movement = 50
 
@@ -209,7 +209,6 @@ class RobotScannerOfRoom:
         self.LEFT_WHEEL.set_position_relative(0)
         self.RIGHT_WHEEL.set_position_relative(0)
         time.sleep(0.05)
-        position = "left"
         
         
         try:
@@ -218,12 +217,10 @@ class RobotScannerOfRoom:
             time.sleep(2)
             
             
-            while True and not self.emergency_stop:
+            while True:
                 # If the robot travelled the whole room, it finished scanning it so it needs to go back to the robot's entrance position
                 if (total_distance>= self.MAX_ROOM_DISTANCE):
                     self.move_back_after_scanning(total_distance)
-                    counter = 0
-                    position = "left"
                     return False  # No green detected so no block dropped
 
                 # Else, the robot is still scanning the room
@@ -232,14 +229,7 @@ class RobotScannerOfRoom:
                 self.move_robot(self.DISTANCE_PER_SCANNING, 150)
                 total_distance += self.DISTANCE_PER_SCANNING
                 time.sleep(1.5)
-                color = self.scanner.main_pendulum(position)
-                if (position == "left"):
-                    position = "right"
-                else:
-                    position = "left"
-                
-                #counter+=1
-                
+                color = self.scanner.main_pendulum()
             
 
                 # If the color detected by the scanning is red, both wheels should stop moving
@@ -253,8 +243,6 @@ class RobotScannerOfRoom:
                     time.sleep(0.2)
                     # Advance the robot to the entrance position. If red was detected, it should have be from a distance of 3 DISTANCE_PER_SCANNING from the extremity of the room
                     self.move_robot(self.DISTANCE_ENTER - self.DISTANCE_PER_SCANNING*3, 150)
-                    position = "left"
-                    counter = 0
                     
                     return False # No green detected so no block dropped
 
@@ -266,15 +254,11 @@ class RobotScannerOfRoom:
                     self.LEFT_WHEEL.set_dps(0)   
                     self.package_delivery(total_distance, delivery_counter)
                     total_distance = 0 # Once done moving back, set the total_distance to 0
-                    counter = 0
-                    position = "left"
-                    
                     return True # Green detected so block dropped -> True
 
 
         except BaseException as error:
             print("Error during scan_room:", error)
-            counter = 0
             BP.reset_all()  
 
 
