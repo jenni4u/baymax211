@@ -59,6 +59,7 @@ def emergency_stop_arms():
     """
     Function that stops the movement of the robot's arms in case of an emergency stop by setting their dps to 0
     It sets the global emergency_stop variable to True
+    Used in robot_movement file 
     Used in emergency_stop_monitor function of the top_level_main, that detects when touch sensor is pressed
 
     Args:
@@ -122,8 +123,9 @@ def color_sample():
 
 
                 # If the counter of Green is equal or higher than 5, the sensor correctly detected the color Green.
-                # Otherwise, the color is None
+                # Play the sound of success
                 # Stop the movement
+                # Otherwise, the color is None
                 if count_green >= 5:
                     color="green"
                     stop_the_arms_movement(color)
@@ -132,8 +134,8 @@ def color_sample():
                     color = None
 
                 # If the counter of Red is equal or higher than 5, the sensor correctly detected the color Red
-                # Otherwise, the color is None
                 # Stop the movement of the arms
+                # Otherwise, the color is None
                 if count_red >= 5:
                     color = "red"
                     stop_the_arms_movement(color)
@@ -154,7 +156,7 @@ def move_motor(motor, position):
 
     Args:
         motor (Motor): The robot's arm to move
-        position (String) : The current position the arms are, either left or right
+        position (String) : The current position the arms are at, either left or right
     """
     global stopped_color_detection, emergency_stop
 
@@ -205,50 +207,78 @@ def move_motor(motor, position):
     
 
 
-#============================================================
-# PENDULUM ARM
-#============================================================
+
 def move_motor_pendulum(position):
+    """
+    Function that moves the color sensor arm to scan the width of the room.
+    Once the scanning is done, it should be stopped from moving
+
+    Args:
+        position (String) : The current position the arm is at, either left or right
+    """
     global stopped_scanner_motor
 
+    # First verify the emrgency_stop has not been activated yet
+    # Otherwise, stop the motor's movement
     if emergency_stop:
         scanner_motor.set_dps(0)
         return
 
+    # Move the motor
     move_motor(scanner_motor, position)
 
+    # The scanning is done and no color has been detected, so stop the arm and global variable stopped__scanner_motor should be set to True
     scanner_motor.set_dps(0)
     stopped_scanner_motor = True
 
 
-#============================================================
-# BLOCK ARM
-#============================================================
+
 def move_drop_motor(position):
+    """
+    Function that moves the block arm to scan the width of the room.
+    Once the scanning is done, it should be stopped from moving
+    
+    Args:
+        position (String) : The current position the arm is at, either left or right
+
+    """
     global stopped_drop_motor
 
+    # First verify the emrgency_stop has not been activated yet
+    # Otherwise, stop the motor's movement
     if emergency_stop:
         drop_motor.set_dps(0)
         return
 
+    # Move the motor
     move_motor(drop_motor, position)
 
+    # The scanning is done and no color has been detected, so stop the arm and global variable stopped__drop_motor should be set to True
     drop_motor.set_dps(0)
     stopped_drop_motor = True
 
 
-#============================================================
-# RUN ALL THREADS TOGETHER
-#============================================================
+#------------- JOIN THE 3 SYSTEMS -------------#
 def main_pendulum(position):
+
+    """
+    Function that runs the sampling of the color sensor, the movement of the color arm and the movement of the block arm at the same time
+    Use threading
+
+    Args:
+        position (String) : The current position the arms are at, either left or right
+
+    Returns:
+        String: Return the color detected in the room when the 3 systems stopped running : Red, Green or None
+    """
     global detected_color, emergency_stop
     global stopped_color_detection, stopped_drop_motor, stopped_scanner_motor
 
     detected_color = None
-    stopped_color_detection = False
-    stopped_drop_motor = False
-    stopped_scanner_motor = False
-    emergency_stop = False
+    stopped_color_detection = False # Boolean that ensures the color sensor can keep reading values
+    stopped_drop_motor = False # Boolean that verifies that the  block arm is moving
+    stopped_scanner_motor = False # Boolean that verifies that the color sensor arm is moving
+    emergency_stop = False # Boolean that verifies the touch sensor has not been pressed
 
     try:
         color_thread = threading.Thread(target=color_sample)
@@ -270,12 +300,18 @@ def main_pendulum(position):
         print("error")
 
 
-#============================================================
-# RESET MOTORS (INTERRUPTIBLE)
-#============================================================
+#----------- REINITIALIZING MOTORS ---------------#
 def reset_motor_to_initial_position(motor):
+    """
+    Function that resets the position of an arm to initial position
+
+    Args:
+        motor (Motor): The robot's arm to set back to position 0
+    """
     global emergency_stop
 
+    # First verify the emrgency_stop has not been activated yet
+    # Otherwise, stop the motor's movement
     if emergency_stop:
         motor.set_dps(0)
         return
@@ -283,21 +319,25 @@ def reset_motor_to_initial_position(motor):
     motor.set_dps(50)
     motor.set_position(INITIAL_POSITION)
 
-    # INTERRUPTIBLE wait
+    # This is an equivalent of a time.sleep(1)
+    # However, this verifies every milisecond for 1 second that a color and an emergency_stop have not been detected yet
+    # Otherwise, stop the motor's movement
     for _ in range(100):
-        if stopped_color_detection or emergency_stop:
+        if stopped_color_detection or emergency_stop: # MARIA, actually idk if we should include stopped_color_detection here
             motor.set_dps(0)
             return
         time.sleep(0.01)
-                
- 
-
     motor.set_dps(0)
 
 
 def reset_both_motors_to_initial_position():
+    """
+        Function that resets the position of the robot's arms at the same tim to initial position using threading
+    """
     global emergency_stop
 
+    # First verify the emrgency_stop has not been activated yet
+    # Otherwise, stop the movement of both motors
     if emergency_stop:
         scanner_motor.set_dps(0)
         drop_motor.set_dps(0)
@@ -309,7 +349,7 @@ def reset_both_motors_to_initial_position():
     t1.start()
     t2.start()
 
-    # INTERRUPTIBLE wait for both
+    # INTERRUPTIBLE wait for both -> That was suggested by ChatGPT, not sure if important
     while t1.is_alive() or t2.is_alive():
         if emergency_stop:
             scanner_motor.set_dps(0)
@@ -317,6 +357,7 @@ def reset_both_motors_to_initial_position():
             return
         time.sleep(0.01)
 
+    # Wait until both complete
     t1.join()
     t2.join()
 
