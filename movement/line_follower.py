@@ -11,15 +11,15 @@ emergency_stop = False
 # CONTROL PARAMETERS
 BASE_SPEED = -250       # default wheel DPS
 BACK_SPEED = 100
-TURN_SPEED = -150
-UNDO_TURN_SPEED = -80
+TURN_SPEED = -130
+UNDO_TURN_SPEED = -110
 CORRECTION_UNDO_TURN_SPEED = -50
 GET_OUT_OF_ORANGE_TIME = 0.6  # seconds to turn when getting out of orange tile
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
 TARGET = 24          # Color sensor is halfway between black and white, at the edge of a line
 TARGET_THRESHOLD = 8   # acceptable error range from target
 MAX_CORRECTION = 100
-BLACK_THRESHOLD = 10   # color sensor is placed at exact middle of line
+BLACK_THRESHOLD = 11   # color sensor is placed at exact middle of line
 WHITE_THRESHOLD = 36    # color sensor is on full white
 INTERSECTION = 7
 ROOM = 0
@@ -173,8 +173,9 @@ def line_follower_distance(distance: float,
             # print("Degrees left to achieve: " + str((degrees_to_achieve - (left_motor.get_encoder() + right_motor.get_encoder())/2)))
             curr_val: float = get_reflected_light_reading(color_sensor, 3) 
             correction_factor: float = -(curr_val - target) * kp
-            left_motor.set_dps(-(speed + correction_factor))
-            right_motor.set_dps(-(speed - correction_factor))
+            # Invert corrections when backing up (wheels lead, sensor follows)
+            left_motor.set_dps(-(speed - correction_factor))
+            right_motor.set_dps(-(speed + correction_factor))
             busy_sleep(0.03)               
         left_motor.set_dps(0)
         right_motor.set_dps(0)
@@ -205,7 +206,7 @@ def line_follower(direction: bool = True,
     
     if not direction:
         base_speed = BACK_SPEED
-        kp = KP -0.2
+        kp = KP - 0.2
     
     while not emergency_stop:
         # Get current reflected light value (reduced scans for faster response)
@@ -222,11 +223,13 @@ def line_follower(direction: bool = True,
 
         # Apply correction to motor speeds
         if direction:
+            # Forward: sensor leads, corrections are intuitive
             left_motor.set_dps(base_speed - correction_factor)
             right_motor.set_dps(base_speed + correction_factor)
         else:
-            left_motor.set_dps(base_speed - correction_factor)
-            right_motor.set_dps(base_speed + correction_factor)
+            # Backward: wheels lead, invert corrections for proper steering
+            left_motor.set_dps(base_speed + correction_factor)
+            right_motor.set_dps(base_speed - correction_factor)
         
         # Small delay to prevent overwhelming the sensor
         busy_sleep(0.01)
@@ -296,7 +299,7 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
 def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
                     right_motor: Motor = RIGHT_WHEEL, 
                     color_sensor: EV3ColorSensor = COLOR_SENSOR,
-                    dps: int = TURN_SPEED+20) -> None:
+                    dps: int = UNDO_TURN_SPEED) -> None:
     """
     Turns the robot 90 degrees to the left on the spot (undo right turn).
     Args:
@@ -312,10 +315,17 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
         
     left_motor.set_dps(dps)
     right_motor.set_dps(-dps)
-    busy_sleep(1)
+    busy_sleep(1.2)
     print("now looking for black line")
-    while get_reflected_light_reading() > (10) and not emergency_stop:
+    while get_reflected_light_reading() > (BLACK_THRESHOLD) and not emergency_stop:
         busy_sleep(0.01)
+    dps += 25
+    left_motor.set_dps(-dps)
+    right_motor.set_dps(dps)
+    while get_reflected_light_reading() < TARGET and not emergency_stop:
+        busy_sleep(0.01)
+    stop()
+        
 
     # print("looking for edge")
     # left_motor.set_dps(-CORRECTION_UNDO_TURN_SPEED)
