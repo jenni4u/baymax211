@@ -140,15 +140,25 @@ def line_follower_distance(distance: float,
     # print("degrees_to_achieve: " + str(degrees_to_achieve))
 
     #Need to give it a little boost to get out of only black
+    if emergency_stop:
+        return
+        
     if forward:
         left_motor.set_dps(speed)
         right_motor.set_dps(speed)
     else:
         left_motor.set_dps(-speed)
         right_motor.set_dps(-speed)
-    busy_sleep(0.5)
-    left_motor.set_dps(0)
-    right_motor.set_dps(0)
+    
+    start_time = time.time()
+    while time.time() - start_time < 0.5 and not emergency_stop:
+        busy_sleep(0.01)
+    
+    if emergency_stop:
+        stop()
+        return
+        
+    stop()
 
     if forward:
         #-1800 > -2400
@@ -285,7 +295,16 @@ def turn_storage_room(left_motor: Motor = LEFT_WHEEL,
         
     left_motor.set_dps(-dps)
     right_motor.set_dps(dps)
-    busy_sleep(GET_OUT_OF_ORANGE_TIME)
+
+    start_time = time.time()
+    while time.time() - start_time < GET_OUT_OF_ORANGE_TIME and not emergency_stop:
+        busy_sleep(0.01)
+    
+    if emergency_stop:
+        left_motor.set_dps(0)
+        right_motor.set_dps(0)
+        return
+        
     while color_sensor.get_red() > 10 and not emergency_stop:
         busy_sleep(0.03)
     while get_reflected_light_reading(color_sensor, 3) < (TARGET + 2) and not emergency_stop:
@@ -315,7 +334,14 @@ def undo_turn_room(left_motor: Motor = LEFT_WHEEL,
         
     left_motor.set_dps(dps)
     right_motor.set_dps(-dps)
-    busy_sleep(1.2)
+    start_time = time.time()
+    while time.time() - start_time < 1.2 and not emergency_stop:
+        busy_sleep(0.01)
+    
+    if emergency_stop:
+        stop()
+        return
+        
     print("now looking for black line")
     while get_reflected_light_reading() > (BLACK_THRESHOLD) and not emergency_stop:
         busy_sleep(0.01)
@@ -385,7 +411,9 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
     inner_wheel.set_dps(dps=inner_dps)
     outer_wheel.set_dps(dps=outer_dps)
     print("Getting out of black")
-    busy_sleep(3) # wait for robot to move off the line
+    start_time = time.time()
+    while time.time() - start_time < 3 and not emergency_stop:
+        busy_sleep(0.01) # wait for robot to move off the line
     
     if emergency_stop:
         stop()
@@ -416,5 +444,65 @@ def smooth_turn(left_motor: Motor = LEFT_WHEEL,
             # line_follower()
             # print("line_follower stopped")
             # move_straight_distance(5)
+
+
+# if curr_val <= BLACK_THRESHOLD: 
+#             print("Target spot found during smooth turn")
+#             # continue turning until we find target spot again
+#             while curr_val < TARGET and not emergency_stop:
+#                 curr_val = get_reflected_light_reading(color_sensor, 3)
+#                 # print(curr_val)
+                     
+
+#             turning = False
+#             print("Ending smooth turn")
+#             stop()
+#             print(curr_val)
+#         busy_sleep(0.01)
+#             #TODO: remove below, left for testing
+#             # print("moving forward to stabilize on line")
+#             # line_follower()
+#             # print("line_follower stopped")
+#             # move_straight_distance(5)
+
+
+# if curr_val <= BLACK_THRESHOLD: 
+#             print("Target spot found during smooth turn")
+#             # continue turning until we find target spot again
+#             while curr_val < TARGET and not emergency_stop:
+#                 curr_val = get_reflected_light_reading(color_sensor, 3)
+#                 # print(curr_val)
+                     
+
+#             turning = False
+#             print("Ending smooth turn")
+#             stop()
+#             print(curr_val)
+#         busy_sleep(0.01)
+#             #TODO: remove below, left for testing
+#             # print("moving forward to stabilize on line")
+#             # line_follower()
+#             # print("line_follower stopped")
+#             # move_straight_distance(5)
+
+
+# if curr_val <= BLACK_THRESHOLD: 
+#             print("Target spot found during smooth turn")
+#             # continue turning until we find target spot again
+#             while curr_val < TARGET and not emergency_stop:
+#                 curr_val = get_reflected_light_reading(color_sensor, 3)
+#                 # print(curr_val)
+                     
+
+#             turning = False
+#             print("Ending smooth turn")
+#             stop()
+#             print(curr_val)
+#         busy_sleep(0.01)
+#             #TODO: remove below, left for testing
+#             # print("moving forward to stabilize on line")
+#             # line_follower()
+#             # print("line_follower stopped")
+#             # move_straight_distance(5)
 
 
