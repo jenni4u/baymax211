@@ -12,9 +12,9 @@ emergency_stop = False
 BASE_SPEED = -250       # default wheel DPS
 BACK_SPEED = 100
 TURN_SPEED = -130
-UNDO_TURN_SPEED = -110
+UNDO_TURN_SPEED = -100
 CORRECTION_UNDO_TURN_SPEED = -50
-GET_OUT_OF_ORANGE_TIME = 1  # seconds to turn when getting out of orange tile
+GET_OUT_OF_ORANGE_TIME = 1.1  # seconds to turn when getting out of orange tile
 KP = -1.3               # adjusts sharpness of turns, the less the smoother
 TARGET = 24          # Color sensor is halfway between black and white, at the edge of a line
 TARGET_THRESHOLD = 8   # acceptable error range from target
@@ -257,7 +257,7 @@ def turn_room(left_motor: Motor = LEFT_WHEEL,
     global emergency_stop
     
     # move forward to position robot for turn
-    line_follower_distance(17.5)
+    line_follower_distance(17.27)
     
     if emergency_stop:
         return
