@@ -6,6 +6,7 @@ import old_pendulum_file_updated as pendulum_scanner
 import line_follower as lf
 import threading
 import time
+import sounds_utils
 
 # === Initialization ===
 left_motor = Motor("B")
@@ -60,6 +61,7 @@ def emergency_stop_monitor():
             break
         
 if __name__ == "__main__":
+    sounds_utils.play_wav("start.wav")
     
     stop_thread = threading.Thread(target=emergency_stop_monitor, daemon=True)
     stop_thread.start()

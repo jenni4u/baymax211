@@ -1,4 +1,5 @@
 import movement.line_follower as lf
+from dd import sounds_utils
     
 def move_to_storage_room():
     """
@@ -13,6 +14,7 @@ def move_to_storage_room():
     
     if lf.emergency_stop:
         return
+    sounds_utils.play_wav("complete.wav")
 
 def return_home(room: int):
     """
@@ -126,7 +128,6 @@ def return_home(room: int):
             
         move_to_storage_room()
         
-        #TODO:play sucess sound, use Maria's function
         
     elif room == 3:
         # move forward to corner

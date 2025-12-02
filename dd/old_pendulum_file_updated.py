@@ -96,7 +96,7 @@ def color_sample():
                 if count_green >= 5:
                     color="green"
                     stop_the_arms_movement(color)
-                    sounds_utils.play_wav("balalala.wav")
+                    sounds_utils.play_wav("success.wav")
                 else:
                     color = None
 
