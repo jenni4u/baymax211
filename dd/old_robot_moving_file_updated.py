@@ -103,7 +103,7 @@ def package_delivery(total_distance, delivery_counter):
 
     #pendulum_mvt.scanner_motor.set_dps(50)
         
-    if (initial_color_angle > 0):
+    if (drop_angle <= initial_color_angle):
         pendulum_mvt.scanner_motor.set_dps(-50)
     else:
         pendulum_mvt.scanner_motor.set_dps(50)
@@ -113,7 +113,7 @@ def package_delivery(total_distance, delivery_counter):
             wheels_stop()
             pendulum_mvt.emergency_stop_arms()
             return
-        if (abs(pendulum_mvt.scanner_motor.get_position() - drop_angle)) < 1 :
+        if (abs(pendulum_mvt.scanner_motor.get_position() - drop_angle) < 1) :
             break
     pendulum_mvt.scanner_motor.set_dps(0)
     
