@@ -229,6 +229,8 @@ def reset_motor_to_initial_position(motor):
         motor.set_dps(0)
         return
     
+    motor.set_position_kp(5)   # lower force
+    motor.set_position_kd(50)  # damping
     motor.set_position(INITIAL_POSITION)
 
     # INTERRUPTIBLE wait
