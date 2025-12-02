@@ -1,6 +1,5 @@
 from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep, TouchSensor, reset_brick
-from playsound3 import playsound
-import return_home as rt
+from sounds_utils import play_wav
 import old_robot_moving_file_updated as robot_scanner
 import old_pendulum_file_updated as pendulum_scanner
 #from robot_moving_in_the_room import RobotScannerOfRoom
@@ -69,7 +68,7 @@ if __name__ == "__main__":
     delivery_counter = 0
     room_counter = 0
 
-    playsound("./sounds/start.wav")
+    play_wav("./sounds/start.wav")
 
     lf.line_follower_distance(2.0, -1.3, left_motor, right_motor, color_sensor, -80, 24)
 
@@ -102,7 +101,7 @@ if __name__ == "__main__":
             if robot_scanner.scan_room(delivery_counter):
                 print("did the scanning")
                 delivery_counter += 1
-                playsound('./sounds/success.wav')
+                play_wav('./sounds/success.wav')
                 print(f"Delivery successful! Total deliveries: {delivery_counter}")
             time.sleep(3)
             color_sensor.set_mode("red")
@@ -124,7 +123,7 @@ if __name__ == "__main__":
                 busy_sleep(1)
                 print("All deliveries completed.")
                 rt.return_home(room_counter)
-                playsound("./sounds/complete.wav")
+                play_wav("./sounds/complete.wav")
                 break
 
         elif INTERSECTION_PATTERN[i] == CORNER:
