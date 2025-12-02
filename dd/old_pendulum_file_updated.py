@@ -8,8 +8,8 @@ import sounds_utils
 
 #----------- CONSTANTS -----------#
 INITIAL_POSITION = 0
-LEFT_POSITION = -45
-RIGHT_POSITION = 45
+LEFT_POSITION = -40
+RIGHT_POSITION = 40
 MOTOR_DPS = 150
 TIME_SLEEP = 1.5
 color_sensor = EV3ColorSensor(3)
@@ -124,7 +124,7 @@ def move_motor(motor, position):
         motor.set_dps(0)
         return
 
-    motor.set_dps(MOTOR_DPS)
+    
     time.sleep(0.01)
 
     if emergency_stop:
@@ -132,8 +132,13 @@ def move_motor(motor, position):
         return
 
     if position == "right":
+        motor.set_dps(-MOTOR_DPS)
         
-        motor.set_position(LEFT_POSITION)
+        while True:
+            if (motor.get_position() <= LEFT_POSITION):
+                break 
+        #motor.set_position(LEFT_POSITION)
+        motor.set_dps(0)
         
         for _ in range(100):
                 if stopped_color_detection or emergency_stop:
@@ -142,8 +147,12 @@ def move_motor(motor, position):
                 time.sleep(0.01)
 
     if position == "left":
-        
-        motor.set_position(RIGHT_POSITION)
+        motor.set_dps(MOTOR_DPS)
+        while True:
+            if (motor.get_position() >= RIGHT_POSITION):
+                break 
+        #motor.set_position(RIGHT_POSITION)
+        motor.set_dps(0)
         
         for _ in range(100):
                 if stopped_color_detection or emergency_stop:
@@ -224,16 +233,31 @@ def main_pendulum(position):
 #============================================================
 def reset_motor_to_initial_position(motor):
     global emergency_stop
-
     if emergency_stop:
         motor.set_dps(0)
         return
     
-    motor.set_position(INITIAL_POSITION)
+    #if (motor.get_position > 0):
+        #while True:
+            #if (motor.get_position() <= 0):
+                #break
+        #motor.set_dps(0)
+    
+    if (motor.get_position() > 0):
+        motor.set_dps(-50)
+    else:
+        motor.set_dps(50)
+
+    while True:
+        if (abs(motor.get_position())) < 1 :
+            break
+    motor.set_dps(0)
+        
+    #motor.set_position(INITIAL_POSITION)
 
     # INTERRUPTIBLE wait
     for _ in range(100):
-        if stopped_color_detection or emergency_stop:
+        if  emergency_stop:
             motor.set_dps(0)
             return
         time.sleep(0.01)

@@ -96,26 +96,43 @@ def package_delivery(total_distance, delivery_counter):
     else:
         angle_movement = 50
         
-    if initial_color_angle < 0:
+    if initial_color_angle < 0:       #color sensor is on the left 
         drop_angle = initial_color_angle + angle_movement
-    else:
+    else:                             #color sensor is on the right 
         drop_angle = initial_color_angle - angle_movement
 
     #pendulum_mvt.scanner_motor.set_dps(50)
-    pendulum_mvt.scanner_motor.set_position(drop_angle)
-    safe_sleep(1.5)
+        
+    if (initial_color_angle > 0):
+        pendulum_mvt.scanner_motor.set_dps(-50)
+    else:
+        pendulum_mvt.scanner_motor.set_dps(50)
+
+    while True:
+        if emergency_triggered():
+            wheels_stop()
+            pendulum_mvt.emergency_stop_arms()
+            return
+        if (abs(pendulum_mvt.scanner_motor.get_position() - drop_angle)) < 1 :
+            break
+    pendulum_mvt.scanner_motor.set_dps(0)
+    
+    #pendulum_mvt.scanner_motor.set_position(drop_angle)
+    #safe_sleep(1.5)
 
     if emergency_triggered():
         pendulum_mvt.emergency_stop_arms()
         return
 
-    pendulum_mvt.scanner_motor.set_dps(0)
+    #pendulum_mvt.scanner_motor.set_dps(0)
 
     #pendulum_mvt.scanner_motor.set_dps(50)
-    pendulum_mvt.scanner_motor.set_position(initial_color_angle)
-    safe_sleep(1.5)
+    # pendulum_mvt.scanner_motor.set_position_kp(5)   # lower force
+    # pendulum_mvt.scanner_motor.set_position_kd(50)  # damping
+    # pendulum_mvt.scanner_motor.set_position(initial_color_angle)
+    # safe_sleep(1.5)
 
-    pendulum_mvt.scanner_motor.set_dps(0)
+    #pendulum_mvt.scanner_motor.set_dps(0)
 
     pendulum_mvt.reset_both_motors_to_initial_position()
     safe_sleep(1)
