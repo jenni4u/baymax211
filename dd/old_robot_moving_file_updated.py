@@ -101,7 +101,7 @@ def package_delivery(total_distance, delivery_counter):
     else:
         drop_angle = initial_color_angle - angle_movement
 
-    pendulum_mvt.scanner_motor.set_dps(50)
+    #pendulum_mvt.scanner_motor.set_dps(50)
     pendulum_mvt.scanner_motor.set_position(drop_angle)
     safe_sleep(1.5)
 
@@ -111,7 +111,7 @@ def package_delivery(total_distance, delivery_counter):
 
     pendulum_mvt.scanner_motor.set_dps(0)
 
-    pendulum_mvt.scanner_motor.set_dps(50)
+    #pendulum_mvt.scanner_motor.set_dps(50)
     pendulum_mvt.scanner_motor.set_position(initial_color_angle)
     safe_sleep(1.5)
 
