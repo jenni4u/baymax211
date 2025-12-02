@@ -8,8 +8,8 @@ import sounds_utils
 
 #----------- CONSTANTS -----------#
 INITIAL_POSITION = 0
-LEFT_POSITION = -45
-RIGHT_POSITION = 45
+LEFT_POSITION = -40
+RIGHT_POSITION = 40
 MOTOR_DPS = 150
 TIME_SLEEP = 1.5
 color_sensor = EV3ColorSensor(3)
@@ -233,7 +233,6 @@ def main_pendulum(position):
 #============================================================
 def reset_motor_to_initial_position(motor):
     global emergency_stop
-
     if emergency_stop:
         motor.set_dps(0)
         return
@@ -244,7 +243,7 @@ def reset_motor_to_initial_position(motor):
                 #break
         #motor.set_dps(0)
     
-    if (motor.get_position > 0):
+    if (motor.get_position() > 0):
         motor.set_dps(-50)
     else:
         motor.set_dps(50)
@@ -258,7 +257,7 @@ def reset_motor_to_initial_position(motor):
 
     # INTERRUPTIBLE wait
     for _ in range(100):
-        if stopped_color_detection or emergency_stop:
+        if  emergency_stop:
             motor.set_dps(0)
             return
         time.sleep(0.01)
