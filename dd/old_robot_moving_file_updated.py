@@ -12,7 +12,7 @@ DISTTODEG = 360 / (2 * math.pi * RADIUS)
 DPS = 50
 MAX_ROOM_DISTANCE = 22
 DISTANCE_PER_SCANNING = 2.8/2
-DISTANCE_ENTER = 9
+DISTANCE_ENTER = 6.5
 
 #------------- SETUP -------------#
 emergency_stop = False
@@ -77,7 +77,7 @@ def move_back_after_scanning(total_distance):
     if emergency_triggered():
         return
 
-    move_robot(-(total_distance - DISTANCE_ENTER), 250)
+    move_robot(-(total_distance + DISTANCE_PER_SCANNING - DISTANCE_ENTER), 250) 
 
 
 def package_delivery(total_distance, delivery_counter):
@@ -202,7 +202,7 @@ def scan_room(delivery_counter):
                 safe_sleep(1.5)
                 pendulum_mvt.reset_both_motors_to_initial_position()
                 safe_sleep(1)
-                move_robot(DISTANCE_ENTER - DISTANCE_PER_SCANNING*3, 150)
+                move_robot(DISTANCE_ENTER - total_distance - DISTANCE_PER_SCANNING, 150) 
                 return False
                 
 
