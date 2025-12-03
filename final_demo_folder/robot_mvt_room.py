@@ -38,6 +38,7 @@ def emergency_triggered():
     return pendulum_mvt.emergency_stop  # use pendulum’s global flag
 
 def safe_sleep(t):
+    """Sleep in chunks so emergency stop interrupts immediately."""
     for _ in range(int(t * 20)):
         if emergency_triggered():
             wheels_stop()
@@ -196,7 +197,7 @@ def scan_room(delivery_counter):
             except Exception:
                 pass
 
-            time.sleep(0.05)
+            busy_sleep(0.05)
 
         wheels_stop()
 

@@ -10,7 +10,7 @@ DISTTODEG = 360 / (2 * math.pi * RADIUS)
 
 #-------- CONSTANTS -----------#
 DPS = 50
-MAX_ROOM_DISTANCE = 21
+MAX_ROOM_DISTANCE = 22
 DISTANCE_PER_SCANNING = 2.8/2
 DISTANCE_ENTER = 7.5
 
@@ -38,6 +38,7 @@ def emergency_triggered():
     return pendulum_mvt.emergency_stop  # use pendulum’s global flag
 
 def safe_sleep(t):
+    """Sleep in chunks so emergency stop interrupts immediately."""
     for _ in range(int(t * 20)):
         if emergency_triggered():
             wheels_stop()
@@ -61,7 +62,6 @@ def move_robot(distance, dps):
     print("move_robot now")
     left_motor.set_position_relative(-distance * DISTTODEG)
     right_motor.set_position_relative(-distance * DISTTODEG)
-    safe_sleep(0.05 + distance * DISTTODEG / dps)
 
 
 def move_back_after_scanning(total_distance):
@@ -107,10 +107,10 @@ def package_delivery(total_distance, delivery_counter):
     
     direction = 0
     if (drop_angle <= initial_color_angle):
-        pendulum_mvt.scanner_motor.set_dps(-25)
+        pendulum_mvt.scanner_motor.set_dps(-50)
         direction = 50
     else:
-        pendulum_mvt.scanner_motor.set_dps(25)
+        pendulum_mvt.scanner_motor.set_dps(50)
         direction = -50
 
     while True:
@@ -224,9 +224,6 @@ def scan_room(delivery_counter):
                 
 
             color = pendulum_mvt.main_pendulum(position)
-            
-            # Clear state between scans to prevent accumulation
-            time.sleep(0.05)  # Allow sensors/motors to stabilize
 
             if position == "right":
                 position = "left"
