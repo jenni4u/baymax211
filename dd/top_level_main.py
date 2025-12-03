@@ -1,7 +1,7 @@
 from utils.brick import Motor, wait_ready_sensors, EV3UltrasonicSensor, EV3ColorSensor, busy_sleep, TouchSensor, reset_brick
 import return_home as rt
-import old_robot_moving_file_updated as robot_scanner
-import old_pendulum_file_updated as pendulum_scanner
+import robot_mvt_room as robot_scanner
+import pendulum as pendulum_scanner
 #from robot_moving_in_the_room import RobotScannerOfRoom
 import line_follower as lf
 import threading
@@ -106,9 +106,17 @@ if __name__ == "__main__":
                 print("did the scanning")
                 delivery_counter += 1
                 print(f"Delivery successful! Total deliveries: {delivery_counter}")
+
+            # Cleanup: clear all motor states and allow system to stabilize
+           
             time.sleep(3)
             color_sensor.set_mode("red")
             wait_ready_sensors(True)
+            time.sleep(0.2)  # Let all threads fully terminate
+            scanner_motor.set_dps(0)
+            drop_motor.set_dps(0)
+            left_motor.set_dps(0)
+            right_motor.set_dps(0)
             
             lf.undo_turn_room(left_motor, right_motor)
             lf.line_follower_distance(3.2, -1.8, left_motor, right_motor, color_sensor, -80, 24) #aggressive correction
