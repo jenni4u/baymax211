@@ -44,7 +44,6 @@ def emergency_stop_monitor():
             if touch_sensor.is_pressed():
                 print("\n*** EMERGENCY STOP ACTIVATED ***")
                 lf.emergency_stop = True
-
                 
                 robot_scanner.emergency_stop = True
                 pendulum_scanner.emergency_stop = True

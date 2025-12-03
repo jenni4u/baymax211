@@ -52,9 +52,12 @@ class ColorDetectionAlgorithm:
                     continue  
 
                 # Find the normalized RGB values by dividing the RGB value by the total and add it to the sum of RGB normalized values
+            
                 red_normalized_total += red_value / total
                 green_normalized_total += green_value / total
                 blue_normalized_total += blue_value / total
+                
+                    
         
                 counter_lines +=1
 
@@ -115,9 +118,12 @@ class ColorDetectionAlgorithm:
             return "The measurement of the unknown colored block was not correctly taken" 
 
         # Normalize the RGB values of the unknown color
+        
         unknown_red_normalized = unknown_red / total_unknown
         unknown_green_normalized = unknown_green / total_unknown
         unknown_blue_normalized = unknown_blue / total_unknown
+        
+            
 
         # Create a dictionary that stores the color names and their distances with the unknown color
         distances = {} 
